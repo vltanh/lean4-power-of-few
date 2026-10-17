@@ -459,7 +459,12 @@ Deviation (hypothesis the proof uses): the statement also assumes `D_c > 0`, whi
 Lemma 2.1 uses. The proof's last step turns `1/2 − min{D_c, D_c x}` into `1/2 − D_c min{1, x}`,
 which needs `D_c ≥ 0`; it also sets `y = 2 − 1/c > 0` and replaces the Berry–Esseen error
 `C_BE (1 − 2σ²)/(σ √(n − 1))` by `C_BE / (σ √n)`, valid when `4σ²(1 − σ²) n ≥ 1`. For `c > 0`,
-`D_c > 0` gives `0.56/c < Φ₀(2 − 1/c) < 1/2`, so `c > 1.12`, hence both. -/
+`D_c > 0` gives `0.56/c < Φ₀(2 − 1/c) < 1/2`, so `c > 1.12`, hence both.
+
+Departure from the paper (a cited lemma applied outside its hypotheses): the covariance step
+applies Lemma A.3 with `d ∈ {0, −1}`, while Lemma A.3 assumes `0 < d < (n₁ + n₂)/2`. The proof
+uses the form of Lemma A.3 for every integer `d` (`sparseAux_pointProb_le`, from which `lemmaA_3`
+follows; it is the dense paper's Lemma 2.4), which Lemma A.3's proof gives. -/
 theorem proposition2_2 (hBE : ShevtsovaBerryEsseen) {n : ℕ} {p Δ c : ℝ} (hp0 : 0 < p)
     (hp1 : p < 1) (hc : 0 < c) (hDc : 0 < Dc c) (hcΔ : c ≤ p * Δ)
     (hcn : c ≤ Real.sqrt (p * (1 - p) * n)) {B₀ : Set (Fin n)}

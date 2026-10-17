@@ -135,7 +135,19 @@ meta def paperResults : List (String × Name) :=
 
 /-- The theorems that Palomar's comparator checks (`theorem_names` of `comparator.json`). -/
 meta def solutionResults : List Name :=
-  []
+  [``Challenge.dense_theorem1_6,
+   ``Challenge.dense_theorem1_2,
+   ``Challenge.dense_theorem1_3,
+   ``Challenge.sparse_theorem1_2,
+   ``Challenge.sparse_theorem1_4,
+   ``Challenge.sparse_theorem1_5,
+   ``Challenge.sparse_theorem1_5_printed_false,
+   ``Challenge.sparse_theorem3_1,
+   ``Challenge.sparse_theorem1_7,
+   ``Challenge.sparse_theorem4_1,
+   ``Challenge.sparse_theorem1_7_printed_false_seq,
+   ``Challenge.sparse_theorem4_1_printed_false_seq,
+   ``Challenge.Φ_eq_cdf_gaussianReal]
 
 /-- Lean's standard axioms. -/
 meta def standardAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
