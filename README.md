@@ -115,7 +115,8 @@ the TeX sources by a second reader.
   reviewed by an independent agent; proofs by parallel sub-agents, each comparing its proof with the
   paper; independent reviews of the proofs, of the findings and of the literature.
 - No person has reviewed the proofs.
-- Made on 2026-10-17 in 6.2 hours, with 34 sub-agents (at most 17 at once).
+- Made on 2026-10-17: a first round of 6.2 hours with 34 sub-agents (at most 17 at once), and a
+  second round of 1.5 hours with 11 (Feige and Ofek's argument, publication, the three libraries).
   [CREDITS.md](CREDITS.md) has the procedure, the agents and the figures.
 
 ## Related work

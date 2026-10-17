@@ -8,17 +8,21 @@ How this formalization was made, from the run log and the session transcripts.
   the journal version of the dense paper; corrected versions of the three false theorems of the
   sparse paper, with Lean counterexamples to the printed ones; and the constants and hypotheses that
   the sparse paper's arguments give, where its printed ones are not proved (Lemma 2.1, Proposition
-  2.2, Lemma 2.3).
+  2.2, Lemma 2.3). In a second round the author asked for Feige and Ofek's argument in place of two
+  assumed results, for the publication, and for the layout of the skill's version 3.0.0.
 - **Formalization:** Claude Code (VS Code extension; versions 2.1.283 at the start and 2.1.301 in the
   transcripts) with the model Claude Opus 5.5 (`claude-opus-5-5`), in one coordinating session with
   sub-agents. There was no earlier draft.
 - **Procedure:** the [formalize-math-paper](https://github.com/vltanh/formalize-math-paper) skill
-  (installed with `npx skills`; version `d82a98e1` at the start, updated during the run to
-  `04e714c7`, which adds the private list of follow-up papers).
+  (installed with `npx skills`; version `d82a98e1` at the start, updated during the first round to
+  `04e714c7` at 08:09 CDT, which adds the list of follow-up papers, and to `e339f644` (version 3.0.0)
+  at 10:43 CDT, which also makes [`External`](External) a library of its own; the first round kept the earlier
+  layout, and the second round reorganized the project to version 3.0.0's).
 - **Review:** no person has reviewed the proofs. Independent agents, which did not write what they
   checked, reviewed the statements against the TeX sources before any proof was written; compared
   every formal proof with the papers' proofs (three reviews); verified every finding of the audit
-  against the TeX; verified the literature notes against their sources; and checked the report.
+  against the TeX; verified the literature notes against their sources; checked the report; and, in
+  the second round, compared the proof of Feige and Ofek's bound with the write-ups it follows.
 
 ## First formalization (2026-10-17)
 
@@ -57,3 +61,39 @@ The figures come from the Claude Code transcripts of the session and its sub-age
 (`session_stats.py` of the skill, with `--until` at that commit). They include the sub-agents that
 agents launched themselves, and the follow-up search. The user's three decisions at the start took
 a few minutes; there were no other pauses. Spending in money was not tracked.
+
+## Second round: Feige–Ofek, publication and the three libraries (2026-10-17)
+
+At the author's request: the repository was published (GitHub, CI, Palomar's preflight) and later
+renamed, [`NEXT.md`](NEXT.md) was made public, the sparse paper's Lemma A.7 was proved by Feige and Ofek's
+argument, which removes two of the three assumed results, and the project was reorganized into
+version 3.0.0's three libraries ([`Basic`](Basic), [`External`](External), [`PowerOfFew`](PowerOfFew)).
+
+How it was made:
+
+- **Statements** (coordinator): the interface theorems of Feige and Ofek's argument, with `sorry`
+  proofs, and the removal of the two hypotheses from every statement (commit `611a33f`); then the
+  results of [`External`](External) in their sources' terms, the edge-variable model in [`Basic`](Basic) and the bridges
+  in the papers' library (commit `3b1f715`).
+- **Proofs:** seven prover sub-agents for Feige and Ofek's argument and three for the
+  reorganization, each in a private copy of the project and owning disjoint files.
+- **Review:** an independent agent compared the formal proof of Feige and Ofek's bound with Chin,
+  Rao and Vu's and Hoffman, Kahle and Paquette's write-ups. It found no mathematical problem; its
+  documentation fixes were applied.
+- **Integration and checks** (coordinator): the statement diffs, the build, the axiom audit, the
+  route check, Comparator, and the report.
+
+Figures, from 15:04:23 CDT (the author's go-ahead) to commit `a86a23a` (16:32:43 CDT), which
+completes the round's [`REPORT.md`](REPORT.md):
+
+- **Elapsed time:** 1.5 hours. Between the two rounds the session waited 1.6 hours for the author
+  (13:25 to 15:04 CDT).
+- **Sub-agents:** 11, all launched by the coordinating session, at most 7 running at once; their
+  total working time was 2.3 hours. None was resumed.
+- **Tool calls and tokens:** sub-agents 515 tool calls, 0.85M output tokens, 1.92M input tokens and
+  60M cache reads; the coordinating session 213 tool calls, 0.36M output tokens, 0.90M input tokens
+  and 134M cache reads.
+- **Model calls:** `claude-opus-5-5`, 203 by the coordinating session and 449 by sub-agents.
+
+The figures come from the same transcripts (`session_stats.py` with `--since` and `--until` at the
+round's start and end).

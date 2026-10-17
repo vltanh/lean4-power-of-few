@@ -144,18 +144,21 @@ automation:
       framework: "Claude Code (VS Code extension), versions 2.1.283 to 2.1.301"
       tool_setup: >-
         The formalize-math-paper skill (https://github.com/vltanh/formalize-math-paper, versions
-        d82a98e1 and 04e714c7): one coordinating session that wrote the statements, integrated and
-        checked the work, and wrote the report, with 34 sub-agents (at most 17 at once): provers with disjoint files,
-        independent reviewers of the statements, of the proofs, of the findings, of the literature and
-        of the report, and literature and follow-up searches.
+        d82a98e1, 04e714c7 and e339f644 (3.0.0)): one coordinating session that wrote the statements,
+        integrated and checked the work, and wrote the report, with 45 sub-agents in two rounds (at
+        most 17 at once): provers with disjoint files, independent reviewers of the statements, of the
+        proofs, of the findings, of the literature and of the report, and literature and follow-up
+        searches.
       cost:
-        wall_time: "6.2 h elapsed (2026-10-17, 07:10 to 13:21 CDT, to the commit completing REPORT.md); 20.4 h of sub-agent working time"
+        wall_time: "7.7 h of work in two rounds on 2026-10-17 (6.2 h, 07:10 to 13:21 CDT; 1.5 h, 15:04 to 16:33 CDT, each to the commit completing its REPORT.md); 22.8 h of sub-agent working time"
         spend_usd: "not tracked"
         hardware: "local machine (20 CPUs, 62 GB RAM) for the Lean builds; models through the Anthropic API"
       prompting_notes: >-
         The user invoked the skill with the two arXiv links and answered three scoping questions
         (the journal version of the dense paper; corrected versions of the false theorems with
-        counterexamples; the constants and hypotheses the arguments give).
+        counterexamples; the constants and hypotheses the arguments give). In a second round the user
+        asked for Feige and Ofek's argument in place of two assumed results, for the publication of
+        the repository and of NEXT.md, and for the layout of the skill's version 3.0.0.
   spend_usd: "not tracked"
   notes: >-
     Fully agentic: the AI system wrote all code and documents; the user chose the scope. No person has
