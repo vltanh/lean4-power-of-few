@@ -1,5 +1,7 @@
 # The power of few: a Lean formalization of two papers on majority dynamics
 
+[![CI](https://github.com/vltanh/lean4-power-of-few-sparse/actions/workflows/lean_action_ci.yml/badge.svg)](https://github.com/vltanh/lean4-power-of-few-sparse/actions/workflows/lean_action_ci.yml)
+
 A Lean 4 / Mathlib formalization of two papers on majority dynamics on the Erdős–Rényi random graph
 `G(n, p)`, where every vertex adopts the colour of the majority of its neighbours, day after day:
 
