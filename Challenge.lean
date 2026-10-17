@@ -1,0 +1,347 @@
+module
+
+public import Mathlib
+
+/-!
+# The power of few: statements of record
+
+The main results of two papers on majority dynamics on the Erdős–Rényi random graph `G(n, p)`:
+
+* L. Tran and V. Vu, *Reaching a consensus on random networks: the power of few*, Theory of
+  Computing 19 (2023), article 6 (the "dense paper"; arXiv:1911.10279);
+* B. Tran and V. Vu, *The "Power of Few" phenomenon: the sparse case*, Random Structures &
+  Algorithms 66 (2025), e21260 (the "sparse paper"; arXiv:2302.05605v2).
+
+**The formalization is conditional.** The papers' explicit constants rest on the Berry–Esseen
+inequality with Shevtsova's constant `0.56`, and the sparse paper's spectral argument on two
+results on random matrices. These are assumed, as hypotheses named after their sources:
+`ShevtsovaBerryEsseen` (Shevtsova 2010), `BBKTheorem3_2` (Benaych-Georges–Bordenave–Knowles,
+Theorem 3.2, for `G(n, p)`), `BLMTheorem6_10` (Boucheron–Lugosi–Massart, Theorem 6.10). Each
+theorem below takes exactly those it uses.
+
+## Conventions
+
+* Vertices are `Fin n`. A colouring is given by its Blue set `B`; Red is the complement.
+* `majorityStep G B` is the next day's Blue set: a vertex becomes (or stays) Blue iff it has more
+  Blue than Red neighbours, or as many and is Blue already. `blueAfter G B₀ t` iterates it `t`
+  times. "Red wins (by day `t`)" means `blueAfter G B₀ t = ∅`.
+* `gnpProb n p P` is the probability that `G ∼ G(n, p)` (Mathlib's
+  `SimpleGraph.binomialRandom`) has property `P`. `coloredProb n p q P` adds an independent random
+  colouring, each vertex Red with probability `q`.
+* `Φ` is the standard normal distribution function (`Φ(a) = 1/2 + Φ₀(a)`,
+  `Φ₀(a) = (2π)^(-1/2) ∫₀^a e^(-x²/2) dx`).
+* `Δ = n/2 − |B₀|`, so that the Red camp has `n/2 + Δ` vertices.
+
+## The statements
+
+* `Challenge.dense_theorem1_6`: the dense paper's main theorem, with the explicit bounds
+  `P₁, …, P₄` (`denseP1`, …). Parts 2–4 are read as the paper proves them (its Lemmas 3.5, 3.6,
+  3.3): with probability `1 − Pₜ`, the graph shrinks every Blue set below the next threshold.
+  `P₂` uses the coefficient `1.83` of the paper's proof; Theorem 1.6 prints `1.38`.
+* `Challenge.dense_theorem1_2`: on `G(n, 1/2)` with `n ≥ 1000`, if Red has at least `n/2 + 5`
+  vertices, Red wins after four days with probability at least `0.9`.
+* `Challenge.dense_theorem1_3`: for constant `p`, Red with at least `n/2 + c` vertices wins after
+  four days with probability at least `1 − K(p) max{1/n, 1/c²}`.
+* `Challenge.sparse_theorem1_2`: if `n − 10 ≥ pn ≥ (1 + λ) log n` and `pΔ ≥ 10`, Red wins within
+  `O(log n / log(pn))` days with probability at least `1 − O(1/min{n, pΔ²} + n^(−λ/2))` (the
+  constants may depend on `λ`).
+* `Challenge.sparse_theorem1_4`: with a random balanced colouring and `p ≥ λ n^(−1/2)`, the larger
+  side wins in `O(1)` days with probability at least `1 − ε`.
+* `Challenge.sparse_theorem1_5`: with a random colouring biased towards Red by
+  `ω(max{(pn)⁻¹, n^(−1/2)})` and `p ≥ (1 + λ) log n / n`, Red wins with probability `1 − o(1)`.
+  The paper asks only for a bias `ω((pn)⁻¹)`; `Challenge.sparse_theorem1_5_printed_false` shows
+  that the printed statement is false (take `p = 1` and bias `(log n)/n`).
+* `Challenge.sparse_theorem3_1`: for `p = (1 − λ) log n / n`, the process becomes periodic with
+  period at most 2, and ends with at most `(log n)^(O(√(log n))) n^λ` Blue vertices, of average
+  degree `O(√(pn))`.
+-/
+
+@[expose] public section
+
+-- BEGIN SHARED DEFINITIONS
+
+open MeasureTheory ProbabilityTheory
+
+noncomputable section
+
+namespace PowerOfFew
+
+/-! ## The random graph `G(n, p)` -/
+
+/-- A real number clamped into the unit interval: `toUnit p = p` whenever `0 ≤ p ≤ 1`. -/
+def toUnit (p : ℝ) : unitInterval := Set.projIcc 0 1 zero_le_one p
+
+/-- The probability that the binomial random graph `G(n, p)` has the property `P`. The law is
+Mathlib's `SimpleGraph.binomialRandom (Fin n) p`, the Erdős–Rényi model `G(n, p)`: each pair of
+distinct vertices is an edge with probability `p`, independently of the other pairs. -/
+def gnpProb (n : ℕ) (p : ℝ) (P : SimpleGraph (Fin n) → Prop) : ℝ :=
+  (SimpleGraph.binomialRandom (Fin n) (toUnit p)).real {G | P G}
+
+/-! ## Majority dynamics -/
+
+/-- The number of neighbours of `v` in the set `S`. -/
+def nbrCount {n : ℕ} (G : SimpleGraph (Fin n)) (S : Set (Fin n)) (v : Fin n) : ℕ :=
+  {u | G.Adj v u ∧ u ∈ S}.ncard
+
+/-- The degree of `v`: its number of neighbours. -/
+abbrev degree {n : ℕ} (G : SimpleGraph (Fin n)) (v : Fin n) : ℕ := (G.neighborSet v).ncard
+
+/-- One day of majority dynamics, acting on the Blue set `B` (Red is `Bᶜ`): a vertex is Blue the
+next day if it has more Blue than Red neighbours, or as many and is Blue today. -/
+def majorityStep {n : ℕ} (G : SimpleGraph (Fin n)) (B : Set (Fin n)) : Set (Fin n) :=
+  {v | nbrCount G Bᶜ v < nbrCount G B v ∨ (nbrCount G Bᶜ v = nbrCount G B v ∧ v ∈ B)}
+
+/-- The Blue set after `t` days of majority dynamics on `G`, starting from the Blue set `B₀`. -/
+def blueAfter {n : ℕ} (G : SimpleGraph (Fin n)) (B₀ : Set (Fin n)) (t : ℕ) : Set (Fin n) :=
+  (majorityStep G)^[t] B₀
+
+/-! ## Random initial colourings -/
+
+/-- The joint law of `G(n, p)` and an independent random colouring in which each vertex is Red
+(`true`) with probability `q`, independently. -/
+def coloredGnp (n : ℕ) (p q : ℝ) : Measure (SimpleGraph (Fin n) × (Fin n → Bool)) :=
+  (SimpleGraph.binomialRandom (Fin n) (toUnit p)).prod
+    (Measure.pi fun _ => bernoulliMeasure true false (toUnit q))
+
+/-- The probability, under `coloredGnp n p q`, that the graph and the initial Blue set have the
+property `P`. -/
+def coloredProb (n : ℕ) (p q : ℝ) (P : SimpleGraph (Fin n) → Set (Fin n) → Prop) : ℝ :=
+  (coloredGnp n p q).real {x | P x.1 {v | x.2 v = false}}
+
+/-! ## Majority dynamics with random activations and updates -/
+
+/-- One day of majority dynamics with random activations and updates (sparse paper,
+Definition 1.6), acting on the Blue set `B`. `A` is the set of active vertices and `U` the set of
+vertices whose update coin is `true`; a vertex updates iff it is in `A ∩ U`. An updating vertex
+observes its active neighbours only, and takes the majority of their colours, keeping its colour
+on a tie; every other vertex keeps its colour. -/
+def lazyStep {n : ℕ} (G : SimpleGraph (Fin n)) (A U B : Set (Fin n)) : Set (Fin n) :=
+  {v | (v ∈ A ∩ U ∧ (nbrCount G (A ∩ Bᶜ) v < nbrCount G (A ∩ B) v ∨
+          (nbrCount G (A ∩ Bᶜ) v = nbrCount G (A ∩ B) v ∧ v ∈ B))) ∨
+       (v ∉ A ∩ U ∧ v ∈ B)}
+
+/-- The coins of one day: activation coins and update coins, one of each per vertex. -/
+abbrev DayCoins (n : ℕ) : Type := (Fin n → Bool) × (Fin n → Bool)
+
+/-- The law of one day's coins: independent activations with probability `pac` and independent
+update coins with probability `pup`. -/
+def dayLaw (n : ℕ) (pac pup : ℝ) : Measure (DayCoins n) :=
+  (Measure.pi fun _ => bernoulliMeasure true false (toUnit pac)).prod
+    (Measure.pi fun _ => bernoulliMeasure true false (toUnit pup))
+
+/-- The Blue set after `t` days of majority dynamics with activations and updates, where `c t`
+are the coins of day `t + 1`. -/
+def lazyBlueAfter {n : ℕ} (G : SimpleGraph (Fin n)) (c : ℕ → DayCoins n) (B₀ : Set (Fin n)) :
+    ℕ → Set (Fin n)
+  | 0 => B₀
+  | t + 1 => lazyStep G {v | (c t).1 v = true} {v | (c t).2 v = true} (lazyBlueAfter G c B₀ t)
+
+/-- The joint law of `G(n, p)` and of the coins of all days, independent of each other. -/
+def lazyLaw (n : ℕ) (p pac pup : ℝ) : Measure (SimpleGraph (Fin n) × (ℕ → DayCoins n)) :=
+  (SimpleGraph.binomialRandom (Fin n) (toUnit p)).prod
+    (Measure.infinitePi fun _ : ℕ => dayLaw n pac pup)
+
+/-- The probability, under `lazyLaw n p pac pup`, that the graph and the coins have the property
+`P`. -/
+def lazyProb (n : ℕ) (p pac pup : ℝ) (P : SimpleGraph (Fin n) → (ℕ → DayCoins n) → Prop) : ℝ :=
+  (lazyLaw n p pac pup).real {x | P x.1 x.2}
+
+/-! ## The normal distribution function -/
+
+/-- `Φ₀(a) = (2π)^(-1/2) ∫₀^a e^(-x²/2) dx`, so that `Φ(a) = 1/2 + Φ₀(a)`. -/
+def Φ₀ (a : ℝ) : ℝ := (Real.sqrt (2 * Real.pi))⁻¹ * ∫ x in (0 : ℝ)..a, Real.exp (-x ^ 2 / 2)
+
+/-- The distribution function of the standard normal law, `Φ(a) = 1/2 + Φ₀(a)`. -/
+def Φ (a : ℝ) : ℝ := 1 / 2 + Φ₀ a
+
+/-! ## The dense paper's Theorem 1.6 (journal version) -/
+
+/-- `F(n, p, c)` of the dense paper's Theorem 1.6. -/
+def denseF (n : ℕ) (p c : ℝ) : ℝ :=
+  Real.sqrt n * Φ₀ ((2 * p * c + min p (1 - p)) / Real.sqrt (p * (1 - p) * n)) -
+    0.6 * (1 - 2 * p + 2 * p ^ 2) / Real.sqrt (p * (1 - p)) - 0.8 / p
+
+/-- `P₁(n, p, c)` of the dense paper's Theorem 1.6. -/
+def denseP1 (n : ℕ) (p c : ℝ) : ℝ :=
+  (0.25 + 0.7 * (1 - 2 * p + 2 * p ^ 2) ^ 2 * (1 + 4 * c ^ 2 / (n : ℝ) ^ 2)) / denseF n p c ^ 2
+
+/-- `P₂(n)` of the dense paper's Theorem 1.6, with the coefficient `1.83` that its proof
+(Lemma 3.5) computes; the statement prints `1.38`. -/
+def denseP2 (n : ℕ) : ℝ := (n : ℝ)⁻¹ * Real.exp (-(0.076 * n - 1.83 * Real.sqrt n))
+
+/-- `P₃(n, p)` of the dense paper's Theorem 1.6. -/
+def denseP3 (n : ℕ) (p : ℝ) : ℝ := (n : ℝ)⁻¹ * Real.exp (-(0.02 * n * (p ^ 3 * n - 80)))
+
+/-- `P₄(n, p)` of the dense paper's Theorem 1.6. -/
+def denseP4 (n : ℕ) (p : ℝ) : ℝ := n * Real.exp (-(2 / 9 * p ^ 2 * (n - 1)))
+
+/-! ## Cited results that the formalization assumes -/
+
+/-- The Berry–Esseen inequality with constant `C`: for `m ≥ 1` independent real random variables
+`X₁, …, Xₘ` with zero means, positive variances and finite absolute third moments, writing
+`B² = ∑ E Xᵢ²`, for every `x`,
+`|P(X₁ + ⋯ + Xₘ ≤ x B) − Φ(x)| ≤ C (∑ E|Xᵢ|³) / B³`. -/
+def BerryEsseenInequality (C : ℝ) : Prop :=
+  ∀ (Ω : Type) [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ] (m : ℕ)
+    (X : Fin m → Ω → ℝ), 0 < m → (∀ i, Measurable (X i)) → iIndepFun X μ →
+    (∀ i, Integrable (fun ω => |X i ω| ^ 3) μ) → (∀ i, ∫ ω, X i ω ∂μ = 0) →
+    (∀ i, 0 < ∫ ω, X i ω ^ 2 ∂μ) →
+    ∀ x : ℝ,
+      |μ.real {ω | ∑ i, X i ω ≤ x * Real.sqrt (∑ i, ∫ ω, X i ω ^ 2 ∂μ)} - Φ x| ≤
+        C * (∑ i, ∫ ω, |X i ω| ^ 3 ∂μ) / Real.sqrt (∑ i, ∫ ω, X i ω ^ 2 ∂μ) ^ 3
+
+/-- **Shevtsova (2010)** (`D:thm:esseen`), *An improvement of convergence rate estimates in the
+Lyapunov theorem*, Doklady Mathematics 82(3), 862–864: the Berry–Esseen inequality holds with the
+constant `0.56`.
+Both papers use it (dense paper, Theorem 2.2; sparse paper, Theorem A.1). It is assumed, not
+proved: its proof rests on computer-assisted estimates of characteristic functions. -/
+def ShevtsovaBerryEsseen : Prop := BerryEsseenInequality 0.56
+
+/-- The adjacency matrix of `G`, with real entries. -/
+def adjMat {n : ℕ} (G : SimpleGraph (Fin n)) : Matrix (Fin n) (Fin n) ℝ :=
+  Matrix.of fun u v => by classical exact if G.Adj u v then 1 else 0
+
+/-- The mean adjacency matrix of `G(n, p)`: `p` off the diagonal and `0` on it. -/
+def meanAdj (n : ℕ) (p : ℝ) : Matrix (Fin n) (Fin n) ℝ :=
+  Matrix.of fun u v => if u = v then 0 else p
+
+/-- The spectral norm (the `ℓ² → ℓ²` operator norm) of a square real matrix. -/
+def specNorm {n : ℕ} (M : Matrix (Fin n) (Fin n) ℝ) : ℝ :=
+  ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) M‖
+
+/-- **Benaych-Georges–Bordenave–Knowles**, *Spectral radii of sparse random matrices*
+(Ann. Inst. H. Poincaré Probab. Statist. 56, 2020; arXiv:1704.02945), Theorem 3.2, for the
+homogeneous Erdős–Rényi graph `G(n, p)` (`p_ij = p` for `i ≠ j`): there is a universal constant
+`C > 0` such that, with `d = p(n − 1)` (the maximal expected degree),
+`κ = p / (d / n)`, `q = √d ∧ n^(1/10) κ^(-1/9)` and `η = √(log n) / q`, if `q ≥ 1` then
+`E‖A − EA‖ / √d ≤ 2 + C η / √(1 ∨ log η)`. Assumed, not proved (the sparse paper uses it in
+Lemma A.7). -/
+def BBKTheorem3_2 : Prop :=
+  ∃ C : ℝ, 0 < C ∧ ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 →
+    let d : ℝ := p * (n - 1)
+    let κ : ℝ := p / (d / n)
+    let q : ℝ := min (Real.sqrt d) ((n : ℝ) ^ (1 / 10 : ℝ) * κ ^ (-(1 / 9 : ℝ)))
+    let η : ℝ := Real.sqrt (Real.log n) / q
+    1 ≤ q →
+      (∫ G, specNorm (adjMat G - meanAdj n p) ∂(SimpleGraph.binomialRandom (Fin n) (toUnit p))) /
+          Real.sqrt d ≤
+        2 + C * η / Real.sqrt (max 1 (Real.log η))
+
+/-- **Boucheron–Lugosi–Massart**, *Concentration Inequalities* (Oxford, 2013), Theorem 6.10: let
+`X₁, …, X_N` be independent random variables with values in `[0, 1]`, and `f : [0, 1]^N → ℝ` a
+separately convex function with `|f(x) − f(y)| ≤ ‖x − y‖` (Euclidean norm) on `[0, 1]^N`. Then
+`Z = f(X₁, …, X_N)` satisfies `P{Z > EZ + t} ≤ e^(−t²/2)` for all `t > 0`. Assumed, not proved
+(the sparse paper uses it in Lemma A.7). -/
+def BLMTheorem6_10 : Prop :=
+  ∀ (Ω : Type) [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ] (N : ℕ)
+    (X : Fin N → Ω → ℝ) (f : (Fin N → ℝ) → ℝ),
+    (∀ i, Measurable (X i)) → iIndepFun X μ → (∀ i ω, X i ω ∈ Set.Icc (0 : ℝ) 1) →
+    (∀ (x : Fin N → ℝ) (i : Fin N), (∀ j, x j ∈ Set.Icc (0 : ℝ) 1) →
+      ConvexOn ℝ (Set.Icc (0 : ℝ) 1) fun s => f (Function.update x i s)) →
+    (∀ x y : Fin N → ℝ, (∀ j, x j ∈ Set.Icc (0 : ℝ) 1) → (∀ j, y j ∈ Set.Icc (0 : ℝ) 1) →
+      |f x - f y| ≤ Real.sqrt (∑ j, (x j - y j) ^ 2)) →
+    ∀ t : ℝ, 0 < t →
+      μ.real {ω | (∫ ω', f (fun j => X j ω') ∂μ) + t < f (fun j => X j ω)} ≤
+        Real.exp (-t ^ 2 / 2)
+
+end PowerOfFew
+
+end
+
+-- END SHARED DEFINITIONS
+
+open MeasureTheory ProbabilityTheory Filter Topology PowerOfFew
+
+namespace Challenge
+
+/-- Dense paper, **Theorem 1.6**. -/
+theorem dense_theorem1_6 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0 : 0 < p)
+    (hp1 : p < 1) (hn : 0 < n) (hc : 0 < c) (hF : 0 < denseF n p c) {B₀ : Set (Fin n)}
+    (hB₀ : (B₀.ncard : ℝ) ≤ n / 2 - c) :
+    1 - denseP1 n p c ≤
+        gnpProb n p (fun G => ((blueAfter G B₀ 1).ncard : ℝ) ≤ n / 2 - 0.8 * Real.sqrt n / p) ∧
+      1 - denseP2 n ≤ gnpProb n p (fun G => ∀ B : Set (Fin n),
+        (B.ncard : ℝ) ≤ n / 2 - 0.8 * Real.sqrt n / p → ((majorityStep G B).ncard : ℝ) ≤ 0.4 * n) ∧
+      1 - denseP3 n p ≤ gnpProb n p (fun G => ∀ B : Set (Fin n),
+        (B.ncard : ℝ) ≤ 0.4 * n → ((majorityStep G B).ncard : ℝ) ≤ p * ((n : ℝ) - 1) / 3) ∧
+      1 - denseP4 n p ≤ gnpProb n p (fun G => ∀ B : Set (Fin n),
+        (B.ncard : ℝ) ≤ p * ((n : ℝ) - 1) / 3 → majorityStep G B = ∅) ∧
+      1 - (denseP1 n p c + denseP2 n + denseP3 n p + denseP4 n p) ≤
+        gnpProb n p (fun G => blueAfter G B₀ 4 = ∅) := by
+  sorry
+
+/-- Dense paper, **Theorem 1.2** (the power of few). -/
+theorem dense_theorem1_2 (hBE : ShevtsovaBerryEsseen) {n : ℕ} (hn : 1000 ≤ n)
+    {B₀ : Set (Fin n)} (hB₀ : (B₀.ncard : ℝ) ≤ n / 2 - 5) :
+    0.9 ≤ gnpProb n (1 / 2) (fun G => blueAfter G B₀ 4 = ∅) := by
+  sorry
+
+/-- Dense paper, **Theorem 1.3** (asymptotic bound). -/
+theorem dense_theorem1_3 (hBE : ShevtsovaBerryEsseen) {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1) :
+    ∃ K : ℝ, ∀ (n c : ℕ), 0 < c → ∀ B₀ : Set (Fin n), (B₀.ncard : ℝ) ≤ n / 2 - c →
+      1 - K * max ((n : ℝ)⁻¹) (((c : ℝ) ^ 2)⁻¹) ≤ gnpProb n p (fun G => blueAfter G B₀ 4 = ∅) := by
+  sorry
+
+/-- Sparse paper, **Theorem 1.2** (the power of few for sparse graphs). -/
+theorem sparse_theorem1_2 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
+    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) :
+    ∃ C K : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
+      p * n ≤ (n : ℝ) - 10 → (1 + lam) * Real.log n ≤ p * n →
+      10 ≤ p * ((n : ℝ) / 2 - B₀.ncard) →
+      1 - C * (1 / min (n : ℝ) (p * ((n : ℝ) / 2 - B₀.ncard) ^ 2) + (n : ℝ) ^ (-(lam / 2))) ≤
+        gnpProb n p (fun G => ∃ t : ℕ,
+          (t : ℝ) ≤ K * (Real.log n / Real.log (p * n)) ∧ blueAfter G B₀ t = ∅) := by
+  sorry
+
+/-- Sparse paper, **Theorem 1.4** (a delayed version of the theorem of Fountoulakis, Kang and
+Makai). -/
+theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
+    (hBLM : BLMTheorem6_10) {ε : ℝ} (hε : 0 < ε) :
+    ∃ lam : ℝ, 0 < lam ∧ ∃ T : ℕ, ∀ (n : ℕ) (p : ℝ), lam ≤ p * Real.sqrt n → p ≤ 1 →
+      1 - ε ≤ coloredProb n p (1 / 2) (fun G B₀ =>
+        ((B₀.ncard : ℝ) < n / 2 ∧ blueAfter G B₀ T = ∅) ∨
+          ((n : ℝ) / 2 < B₀.ncard ∧ blueAfter G B₀ T = Set.univ)) := by
+  sorry
+
+/-- Sparse paper, **Theorem 1.5**, corrected (bias `ω(max{(pn)⁻¹, n^(−1/2)})`). -/
+theorem sparse_theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
+    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ} (hp0 : ∀ n, 0 < p n)
+    (hp1 : ∀ n, p n ≤ 1) (hlog : ∀ n : ℕ, (1 + lam) * Real.log n / n ≤ p n)
+    (hq : ∀ n, q n ≤ 1)
+    (hbias : Tendsto (fun n : ℕ => (q n - 1 / 2) * min (p n * n) (Real.sqrt n)) atTop atTop) :
+    Tendsto (fun n : ℕ =>
+      coloredProb n (p n) (q n) (fun G B₀ => ∃ t, blueAfter G B₀ t = ∅)) atTop (𝓝 1) := by
+  sorry
+
+/-- Sparse paper, **Theorem 1.5** as printed (bias `ω((pn)⁻¹)`) is false. -/
+theorem sparse_theorem1_5_printed_false :
+    ¬ ∀ (lam : ℝ), 0 < lam → ∀ (p q : ℕ → ℝ), (∀ n, 0 < p n) → (∀ n, p n ≤ 1) →
+      (∀ n : ℕ, (1 + lam) * Real.log n / n ≤ p n) → (∀ n, q n ≤ 1) →
+      Tendsto (fun n : ℕ => (q n - 1 / 2) * (p n * n)) atTop atTop →
+      Tendsto (fun n : ℕ =>
+        coloredProb n (p n) (q n) (fun G B₀ => ∃ t, blueAfter G B₀ t = ∅)) atTop (𝓝 1) := by
+  sorry
+
+/-- Sparse paper, **Theorem 3.1** (below the connectivity threshold). -/
+theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
+    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam < 1) :
+    ∃ C K : ℝ, ∀ (n : ℕ) (B₀ : Set (Fin n)),
+      10 ≤ (1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) →
+      1 - C * (1 / min (n : ℝ) ((1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) ^ 2) +
+          (n : ℝ) ^ (-(1 - lam))) ≤
+        gnpProb n ((1 - lam) * Real.log n / n) (fun G => ∃ t₀ : ℕ,
+          (∀ t ≥ t₀, blueAfter G B₀ t = blueAfter G B₀ t₀ ∨
+            blueAfter G B₀ t = blueAfter G B₀ (t₀ + 1)) ∧
+          (blueAfter G B₀ (t₀ + 1)).ncard ≤ (blueAfter G B₀ t₀).ncard ∧
+          ((blueAfter G B₀ t₀).ncard : ℝ) ≤
+            Real.log n ^ (K * Real.sqrt (Real.log n)) * (n : ℝ) ^ lam ∧
+          ∑ᶠ v ∈ blueAfter G B₀ t₀, (degree G v : ℝ) ≤
+            K * Real.sqrt ((1 - lam) * Real.log n) * (blueAfter G B₀ t₀).ncard) := by
+  sorry
+
+/-- `Φ` is the distribution function of the standard Gaussian law (a compared theorem: it
+identifies the Challenge's `Φ` with Mathlib's `gaussianReal 0 1`). -/
+theorem Φ_eq_cdf_gaussianReal (a : ℝ) : Φ a = cdf (gaussianReal 0 1) a := by
+  sorry
+
+end Challenge
