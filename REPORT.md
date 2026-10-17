@@ -16,19 +16,23 @@ day.
 
 Status of the formalization:
 
-- **Everything the papers prove is proved**, by the papers' own arguments: in the dense paper,
+- **Everything the papers prove is proved**, by the papers' own arguments (Lemma A.7 excepted, at the
+  author's request; Section 7): in the dense paper,
   Theorems 1.2, 1.3 and 1.6, Lemma 2.1 with Claims 2.5 and 2.6, Lemmas 2.3, 2.4, 3.2–3.6 and
   Appendix A; in the sparse paper, Theorems 1.2, 1.4, 1.5, 1.7, 3.1 and 4.1, Lemma 2.1, Proposition
   2.2, Lemmas 2.3–2.6, Propositions 4.2–4.4, Corollary A.2 and Lemmas A.3–A.7. The dense Theorem 1.5,
   which its paper states without proof, is derived from the sparse Theorem 1.2. The cited results
-  that the proofs use are proved too (Section 2), except three.
-- **The formalization is conditional** on three cited results, assumed as hypotheses named after
-  their sources and written in the signature of every theorem that uses them: the Berry–Esseen
-  inequality with Shevtsova's constant `0.56` ([`ShevtsovaBerryEsseen`](Challenge.lean#L207)), Theorem 3.2 of
-  Benaych-Georges–Bordenave–Knowles on the spectral norm of sparse random matrices
-  ([`BBKTheorem3_2`](Challenge.lean#L228)), and Theorem 6.10 of Boucheron–Lugosi–Massart, Talagrand's concentration
-  inequality for separately convex Lipschitz functions ([`BLMTheorem6_10`](Challenge.lean#L244)). Lean has none of them
-  (Section 2).
+  that the proofs use are proved too (Section 2), except one; the two that the sparse paper uses
+  for its spectral bound (Lemma A.7) are bypassed, as Lemma A.7 is proved by Feige and Ofek's
+  argument.
+- **The formalization is conditional** on one cited result, assumed as a hypothesis named after its
+  source and written in the signature of every theorem that uses it: the Berry–Esseen inequality
+  with Shevtsova's constant `0.56` ([`ShevtsovaBerryEsseen`](Challenge.lean#L205)). Lean has no Berry–Esseen bound, and this
+  constant rests on computer-assisted estimates (Section 2). The sparse paper's spectral bound
+  `‖A − E A‖ = O(√(pn))`, which it takes from Theorem 3.2 of Benaych-Georges–Bordenave–Knowles and
+  Theorem 6.10 of Boucheron–Lugosi–Massart, is proved by Feige and Ofek's argument
+  ([`External.FeigeOfek.opNorm_adjMatrix_sub_le`](External/FeigeOfek/FeigeOfek.lean#L219)); the paper's derivation from the two results is
+  formalized as well, with the two results as hypotheses ([`PowerOfFew.Sparse.lemmaA_7_of_bbk_blm`](PowerOfFew/Sparse/MatrixNormDerivation.lean#L425)).
 - **Three printed theorems are false**: the sparse paper's Theorem 1.5 (biased random colourings)
   and Theorems 1.7 and 4.1 (random activations and updates). The formalization proves that they are
   false ([`theorem1_5_printed_false`](PowerOfFew/Sparse/RandomColoring.lean#L644), [`theorem1_7_printed_false`](PowerOfFew/Sparse/ActivationCounterexample.lean#L882), [`theorem4_1_printed_false`](PowerOfFew/Sparse/ActivationCounterexample.lean#L898) and
@@ -40,12 +44,15 @@ Status of the formalization:
   library: all use only [`propext`](https://leanprover-community.github.io/mathlib4_docs/Init/Core.html#propext), [`Classical.choice`](https://leanprover-community.github.io/mathlib4_docs/Init/Prelude.html#Classical.choice) and [`Quot.sound`](https://leanprover-community.github.io/mathlib4_docs/Init/Prelude.html#Quot.sound). Palomar's Comparator
   (`lake env lake comparator --config=comparator.json`) accepts [`Solution.lean`](Solution.lean) against
   [`Challenge.lean`](Challenge.lean) under the Lean and NanoDa kernels.
-- **Proofs.** Every proof follows its paper's argument. Nineteen results depart from it at one or
-  more steps (eighteen departures), each to repair a step that is wrong or has a gap; none replaces a
-  whole argument (Section 7). The route check ([`scripts/route_check.py`](scripts/route_check.py)) confirms that every proof uses
+- **Proofs.** Every proof follows its paper's argument, with one exception made at the author's
+  request: Lemma A.7 is proved by Feige and Ofek's argument, since the two results the paper cites
+  for it need mathematics Lean lacks. Nineteen results depart from their paper's proof at one or
+  more steps (nineteen departures); eighteen departures repair a step that is wrong or has a gap,
+  and the nineteenth is that of Lemma A.7 (Section 7). The route check ([`scripts/route_check.py`](scripts/route_check.py)) confirms that every proof uses
   the results that its paper's proof cites, with four recorded differences: one is departure 8, the
   other three are not departures (Section 8). Independent readers compared every formal proof with
-  the TeX source.
+  the TeX source, and the proof of Feige and Ofek's bound with the write-ups it follows (Chin, Rao and
+  Vu; Hoffman, Kahle and Paquette).
 
 ## 1. Summary
 
@@ -76,32 +83,43 @@ Status of the formalization:
 
 ## 2. Results from prior work and how the papers use them
 
-### Proved
+### Proved (in `External/`, or in `Basic/` when general)
 
 | Result | Where the papers use it | Source | Theorem in the formalization |
 | --- | --- | --- | --- |
 | Hoeffding's inequality | dense Theorem 3.1, in Lemmas 3.3 and 3.4 | W. Hoeffding, *J. Amer. Statist. Assoc.* 58 (1963) | [`ProbabilityTheory.measureReal_sum_ge_add_le_exp`](Basic/Probability/Concentration.lean#L60), [`ProbabilityTheory.measureReal_sum_le_sub_le_exp`](Basic/Probability/Concentration.lean#L99) ([`Basic/Probability/Concentration.lean`](Basic/Probability/Concentration.lean), from Mathlib's sub-Gaussian Hoeffding bound) |
-| Chernoff's bounds | sparse paper, equations (29), (30), Lemmas A.4–A.6, Propositions 4.2–4.4 | standard | [`ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp_klBern`](Basic/Probability/Chernoff.lean#L191), [`ProbabilityTheory.IsBernoulliFamily.measureReal_sum_ge_le_exp`](Basic/Probability/Chernoff.lean#L258), [`ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp`](Basic/Probability/Chernoff.lean#L297) ([`Basic/Probability/Chernoff.lean`](Basic/Probability/Chernoff.lean)) |
+| Chernoff's bounds | sparse paper, equations (29), (30), Lemmas A.4–A.6, Propositions 4.2–4.4 | standard | [`ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp_klBern`](Basic/Probability/Chernoff.lean#L194), [`ProbabilityTheory.IsBernoulliFamily.measureReal_sum_ge_le_exp`](Basic/Probability/Chernoff.lean#L261), [`ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp`](Basic/Probability/Chernoff.lean#L300) ([`Basic/Probability/Chernoff.lean`](Basic/Probability/Chernoff.lean)) |
 | `C(2m, m) < 4^m/√(2m)` | dense Lemma 3.2 | J. Matoušek, J. Nešetřil, *Invitation to Discrete Mathematics*, Proposition 2.6.2 | [`Nat.centralBinom_lt_four_pow_div_sqrt`](Basic/Combinatorics/Choose.lean#L68) ([`Basic/Combinatorics/Choose.lean`](Basic/Combinatorics/Choose.lean)), by the book's product argument |
 | `C(n, k) ≤ e^(n H(k/n))` | sparse Lemmas 2.3 and A.5 ("a routine Stirling bound", S:1081; S:1765) | standard | [`Nat.choose_le_exp_mul_binEntropy`](Basic/Combinatorics/Choose.lean#L169), from Stirling's bounds |
-| Eventual period two of majority dynamics | sparse Theorem 3.1 | E. Goles, J. Olivos, *Discrete Appl. Math.* 3 (1981); S. Poljak, M. Sůra, *Combinatorica* 3 (1983) | [`PowerOfFew.blueAfter_eventually_period_two`](PowerOfFew/External/GolesOlivos/GolesOlivos.lean#L127) (`External/GolesOlivos/`), by the energy argument |
+| Eventual period two of majority dynamics | sparse Theorem 3.1 | E. Goles, J. Olivos, *Discrete Appl. Math.* 3 (1981); S. Poljak, M. Sůra, *Combinatorica* 3 (1983) | [`External.GolesOlivos.eventually_period_two`](External/GolesOlivos/GolesOlivos.lean#L133) ([`External/GolesOlivos/`](External/GolesOlivos)), for symmetric threshold networks, by Goles and Olivos's energy argument; [`PowerOfFew.blueAfter_eventually_period_two`](PowerOfFew/Model/Majority.lean#L224) applies it to majority dynamics |
+| `‖A − E A‖ ≤ C √(pn)` with probability `1 − n^(−a)` for `G(n, p)` with `pn ≥ c log n` | sparse Lemma A.7, in place of the two results below (departure 19) | U. Feige, E. Ofek, *Random Structures Algorithms* 27 (2005), Section 2, in the presentation of P. Chin, A. Rao, V. Vu (COLT 2015) | [`External.FeigeOfek.opNorm_adjMatrix_sub_le`](External/FeigeOfek/FeigeOfek.lean#L219) ([`External/FeigeOfek/`](External/FeigeOfek)), by their argument: a net of the unit ball, the light pairs by an exponential-moment bound, the heavy pairs by bounded degrees and discrepancy |
 
-### Assumed (the formalization is conditional on these)
+### Assumed (the formalization is conditional on this)
 
-| Result | Where the papers use it | Source | Hypothesis | What Lean lacks |
+| Result | Where the papers use it | Source | Hypothesis | What Lean lacks | Plan, if any |
+| --- | --- | --- | --- | --- | --- |
+| Berry–Esseen inequality with constant 0.56, for independent, not necessarily identically distributed summands | dense Theorem 2.2 (Lemmas 2.3, 2.4, Claims 2.5, 2.6, Appendix A); sparse Theorem A.1 (Corollary A.2, Lemma A.3, Proposition 2.2, Theorem 1.4) | I. G. Shevtsova, *Doklady Math.* 82 (2010) 862–864 | [`ShevtsovaBerryEsseen`](Challenge.lean#L205) | Mathlib has the central limit theorem but no Berry–Esseen bound; the constant 0.56 rests on computer-assisted estimates of characteristic functions | a Berry–Esseen bound with a provable constant (Stein's method gives about 4.1) would make the results whose statements survive it unconditional (Section 11) |
+
+The hypothesis was checked against its source: it is not stronger than what the source proves
+([`External/BerryEsseen/README.md`](External/BerryEsseen/README.md)). In particular, it allows summands that are not
+identically distributed, which the papers need (Section 2, last table), and Shevtsova's constant
+for that case is 0.5583 ≤ 0.56. It is a proposition, not a class or structure, and a reader of each
+theorem sees whether it uses it. It cannot be instantiated in the project without proving
+Shevtsova's theorem, which is why it is assumed.
+
+### Cited by the papers, not assumed
+
+The sparse paper proves Lemma A.7 from two results on random matrices. Both are stated
+([`External/BenaychGeorgesBordenaveKnowles/`](External/BenaychGeorgesBordenaveKnowles), [`External/BoucheronLugosiMassart/`](External/BoucheronLugosiMassart), checked against
+their sources like the hypothesis above), and
+the paper's derivation of Lemma A.7 from them is formalized with them as hypotheses
+([`PowerOfFew.Sparse.lemmaA_7_of_bbk_blm`](PowerOfFew/Sparse/MatrixNormDerivation.lean#L425), with the repairs of departure 18). No other result uses
+them: the library proves Lemma A.7 by Feige and Ofek's argument (above).
+
+| Result | Where the paper uses it | Source | Statement | What Lean lacks |
 | --- | --- | --- | --- | --- |
-| Berry–Esseen inequality with constant 0.56, for independent, not necessarily identically distributed summands | dense Theorem 2.2 (Lemmas 2.3, 2.4, Claims 2.5, 2.6, Appendix A); sparse Theorem A.1 (Corollary A.2, Lemma A.3, Proposition 2.2, Theorem 1.4) | I. G. Shevtsova, *Doklady Math.* 82 (2010) 862–864 | [`ShevtsovaBerryEsseen`](Challenge.lean#L207) | Mathlib has the central limit theorem but no Berry–Esseen bound; the constant 0.56 rests on computer-assisted estimates of characteristic functions |
-| `E‖A − EA‖/√d ≤ 2 + Cη/√(1 ∨ log η)` for `G(n, p)` | sparse Lemma A.7 | F. Benaych-Georges, C. Bordenave, A. Knowles, *Ann. IHP Probab. Stat.* 56 (2020), Theorem 3.2 | [`BBKTheorem3_2`](Challenge.lean#L228) | spectral norms of random matrices (moment method, non-backtracking matrices) |
-| `P{Z > EZ + t} ≤ e^(−t²/2)` for separately convex 1-Lipschitz functions of independent `[0, 1]`-valued variables | sparse Lemma A.7 | S. Boucheron, G. Lugosi, P. Massart, *Concentration Inequalities* (2013), Theorem 6.10 (Talagrand; Ledoux's proof) | [`BLMTheorem6_10`](Challenge.lean#L244) | Talagrand's inequality and the entropy method |
-
-Each hypothesis was checked against its source: none is stronger than what the source proves
-(`PowerOfFew/External/*/README.md`). In particular, the Berry–Esseen hypothesis allows summands
-that are not identically distributed, which the papers need (Section 2, last table), and Shevtsova's
-constant for that case is 0.5583 ≤ 0.56. The hypotheses are propositions, not classes or structures,
-and a reader of each theorem sees exactly the ones it uses. They cannot be instantiated in the project
-without proving the cited results, which is why they are assumed. The last two could be replaced by
-the Feige–Ofek bound `‖A − EA‖ = O(√(pn))` with high probability, a large but elementary proof
-(Section 11).
+| `E‖A − EA‖/√d ≤ 2 + Cη/√(1 ∨ log η)` for `G(n, p)` | sparse Lemma A.7 | F. Benaych-Georges, C. Bordenave, A. Knowles, *Ann. IHP Probab. Stat.* 56 (2020), Theorem 3.2 | [`External.BenaychGeorgesBordenaveKnowles.theorem3_2`](External/BenaychGeorgesBordenaveKnowles/Theorem3_2.lean#L32) | spectral norms of random matrices (moment method, non-backtracking matrices) |
+| `P{Z > EZ + t} ≤ e^(−t²/2)` for separately convex 1-Lipschitz functions of independent `[0, 1]`-valued variables | sparse Lemma A.7 | S. Boucheron, G. Lugosi, P. Massart, *Concentration Inequalities* (2013), Theorem 6.10 (Talagrand; Ledoux's proof) | [`External.BoucheronLugosiMassart.theorem6_10`](External/BoucheronLugosiMassart/Theorem6_10.lean#L29) | Talagrand's inequality and the entropy method |
 
 ### Standard facts used without citation
 
@@ -110,7 +128,7 @@ the Feige–Ofek bound `‖A − EA‖ = O(√(pn))` with high probability, a la
 | Chebyshev's inequality | dense Lemma 2.1; sparse Lemma 2.1, Proposition 4.2 | [`ProbabilityTheory.measureReal_ge_le_variance_div_sq`](Basic/Probability/Concentration.lean#L43) and its lower-tail twin, from Mathlib's `meas_ge_le_variance_div_sq` |
 | Markov's inequality, union bound | everywhere | Mathlib (`mul_meas_ge_le_integral_of_nonneg`, `measureReal_biUnion_finset_le`) |
 | Properties of `Φ`: monotone, `Φ₀` concave on `[0, ∞)`, `Φ₀(x)/x` decreasing | dense Theorems 1.2, 1.3; sparse Proposition 2.2 | [`PowerOfFew/Model/Normal.lean`](PowerOfFew/Model/Normal.lean); [`PowerOfFew.Φ_eq_cdf_gaussianReal`](PowerOfFew/Model/Normal.lean#L39) identifies `Φ` with Mathlib's Gaussian law |
-| Independence of the edges of `G(n, p)`, conditioning on one edge | dense Claim 2.6; sparse Proposition 2.2 | [`PowerOfFew/Model/Gnp.lean`](PowerOfFew/Model/Gnp.lean), [`PowerOfFew/Model/EdgeConditioning.lean`](PowerOfFew/Model/EdgeConditioning.lean) |
+| Independence of the edges of `G(n, p)`, conditioning on one edge | dense Claim 2.6; sparse Proposition 2.2 | [`Basic/Probability/Combinatorics/BinomialRandomGraph/EdgeVariables.lean`](Basic/Probability/Combinatorics/BinomialRandomGraph/EdgeVariables.lean) (the edge variables), [`PowerOfFew/Model/Gnp.lean`](PowerOfFew/Model/Gnp.lean) (the rules for [`gnpProb`](Challenge.lean#L84)), [`PowerOfFew/Model/EdgeConditioning.lean`](PowerOfFew/Model/EdgeConditioning.lean) |
 | The subgraph of `G(n, p)` induced on `m` vertices is `G(m, p)`; the days' coins are independent | sparse Section 4 | [`PowerOfFew/Model/Lazy.lean`](PowerOfFew/Model/Lazy.lean) |
 | Operator norm, Cauchy–Schwarz | sparse Lemma 2.5 | Mathlib |
 
@@ -151,7 +169,7 @@ proof in its paper, and its formal proof uses the same two-day argument.)
 (`12.8/7 = 1.8286`), so 1.38 is a transposition. Lemma 3.5 states `1 − n⁻¹ exp(−.025n)`, which its
 proof gives only when `.025n ≤ .076n − 1.83√n`, that is for `n ≥ 1288`: the statement claims more
 than the proof gives. The results hold with `P₂(n) = n⁻¹ exp(−(.076n − 1.83√n))`; Theorem 1.2 is
-unaffected (`P₂(1000) ≈ 1.3 · 10⁻¹¹`). The formalization uses the coefficient 1.83 ([`denseP2`](Challenge.lean#L179)) and
+unaffected (`P₂(1000) ≈ 1.3 · 10⁻¹¹`). The formalization uses the coefficient 1.83 ([`denseP2`](Challenge.lean#L177)) and
 proves the printed `.025n` form for `n ≥ 1288` ([`lemma3_5_printed`](PowerOfFew/Dense/Shrinking.lean#L650)).
 
 **E3. Theorem 1.6, Parts 2–4 (D:496–509).** The parts are written as conditional probabilities,
@@ -404,10 +422,10 @@ counterexample without it is known (Section 6 lists it among the corrections).
 Representation:
 
 - The random graph `G(n, p)` is Mathlib's `SimpleGraph.binomialRandom (Fin n) p`; probabilities of
-  events are [`gnpProb`](Challenge.lean#L86). A colouring is its Blue set `B`; Red is the complement. `majorityStep G B` is
+  events are [`gnpProb`](Challenge.lean#L84). A colouring is its Blue set `B`; Red is the complement. `majorityStep G B` is
   the next day's Blue set: a vertex is Blue if it has more Blue than Red neighbours, or as many and is
-  Blue already; [`blueAfter`](Challenge.lean#L104) iterates it. A random colouring ([`coloredProb`](Challenge.lean#L117)) is independent of the
-  graph. In the activation model ([`lazyStep`](Challenge.lean#L127), [`lazyLaw`](Challenge.lean#L149)), day `t + 1` uses fresh activation and
+  Blue already; [`blueAfter`](Challenge.lean#L102) iterates it. A random colouring ([`coloredProb`](Challenge.lean#L115)) is independent of the
+  graph. In the activation model ([`lazyStep`](Challenge.lean#L125), [`lazyLaw`](Challenge.lean#L147)), day `t + 1` uses fresh activation and
   update coins, independent of each other, of the graph and of the other days; an updating vertex
   takes the majority among its active neighbours (E21). `Φ` is the standard normal distribution
   function; [`PowerOfFew.Φ_eq_cdf_gaussianReal`](PowerOfFew/Model/Normal.lean#L39) identifies it with Mathlib's Gaussian law.
@@ -453,10 +471,13 @@ Corrections of statements (Section 3 has the reasons):
 
 ## 7. Departures from the papers' proofs
 
-Every proof follows its paper's argument. These nineteen results depart from it at one or more
-steps, each to repair a step that is wrong or has a gap that the paper's lines cannot close as
-written; the docstring of each (for Lemma 2.4, of the inequality it uses) says "Departure from the
-paper".
+Every proof follows its paper's argument, except that of Lemma A.7. These nineteen results depart
+from their paper's proof at one or more steps. Departures 1–18 repair a step that is wrong or has a
+gap that the paper's lines cannot close as written. Departure 19, at the author's request, replaces
+the whole argument of Lemma A.7, whose two cited results need mathematics that Lean lacks; the
+paper's argument is formalized too, with the two results as hypotheses (departure 18 is in that
+derivation). The docstring of each (for Lemma 2.4, of the inequality it uses) says "Departure from
+the paper".
 
 | # | Result | The paper's argument | The formalization's | Why it is necessary | E |
 | --- | --- | --- | --- | --- | --- |
@@ -477,7 +498,8 @@ paper".
 | 15 | sparse Proposition 4.2 | `c = 10`; the band `C_ε√(p_ac\|B₀\|)` by Chernoff | `c = 2`; the band `C_ε√(max{p_ac\|B₀\|, C_ε²})` | `c = 10` is not admissible for `p` near 1; Chernoff does not give the band for small `\|B₀\|` | E22 |
 | 16 | sparse Proposition 4.4 | Lemma A.4 on the active subgraph, degree `≥ α_λ p p_ac n` | Lemma A.4 after a concentration step for `\|V_t^ac\|`; degree `> α_λ log n` | Lemma A.4 needs its hypothesis on `\|V_t^ac\|` | E24 |
 | 17 | sparse Lemma A.5 | `P(X ≤ ε E X)`; sets of exactly `⌈n^(λ+δ)⌉` vertices | the threshold `εpnk`; larger sets by removing vertices of maximal degree | the event is `X < εpnk`; larger sets were not treated | E25 |
-| 18 | sparse Lemma A.7 | `t = 2√(apn)`; `η ≤ c^(−1/2)` | `t = 2√(a log n)`; `η ≤ √(2/c) + 5`; small `n` by the Frobenius norm | the tail is `n^(−ac)`; a branch of `q`; `q < 1` for small `n` | E26 |
+| 18 | sparse Lemma A.7, the paper's derivation ([`lemmaA_7_of_bbk_blm`](PowerOfFew/Sparse/MatrixNormDerivation.lean#L425)) | `t = 2√(apn)`; `η ≤ c^(−1/2)` | `t = 2√(a log n)`; `η ≤ √(2/c) + 5`; small `n` by the Frobenius norm | the tail is `n^(−ac)`; a branch of `q`; `q < 1` for small `n` | E26 |
+| 19 | sparse Lemma A.7 ([`lemmaA_7`](PowerOfFew/Sparse/MatrixNorm.lean#L40)) | Theorem 3.2 of Benaych-Georges–Bordenave–Knowles (the expectation) and Theorem 6.10 of Boucheron–Lugosi–Massart (the concentration) | Feige and Ofek's argument ([`External.FeigeOfek.opNorm_adjMatrix_sub_le`](External/FeigeOfek/FeigeOfek.lean#L219)): a net of the unit ball, the light pairs by an exponential-moment bound, the heavy pairs by bounded degrees and discrepancy, all from Chernoff bounds | the two cited results need mathematics Lean lacks (a moment method for non-backtracking matrices; Talagrand's inequality); the author asked for this replacement | — |
 
 Two further choices are not departures. The proof of the sparse Proposition 4.3 cites "Lemma 2.6"
 for a bound that is the first half of Lemma 2.6's proof; the formal proof uses Lemmas 2.5, A.7 and
@@ -495,10 +517,10 @@ result uses only the standard axioms):
 | --- | --- | --- |
 | D Thm 1.2 | [`PowerOfFew.Dense.theorem1_2`](PowerOfFew/Dense/Main.lean#L290) | Berry–Esseen (assumed), Hoeffding, central binomial bound (Matoušek–Nešetřil) |
 | D Thm 1.3 | [`PowerOfFew.Dense.theorem1_3`](PowerOfFew/Dense/Main.lean#L488) | Berry–Esseen (assumed), Hoeffding, central binomial bound (Matoušek–Nešetřil) |
-| D Thm 1.5 | [`PowerOfFew.Dense.theorem1_5`](PowerOfFew/Dense/Appendix.lean#L42) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
+| D Thm 1.5 | [`PowerOfFew.Dense.theorem1_5`](PowerOfFew/Dense/Appendix.lean#L42) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
 | D Thm 1.6 | [`PowerOfFew.Dense.theorem1_6`](PowerOfFew/Dense/Main.lean#L44) | Berry–Esseen (assumed), Hoeffding, central binomial bound (Matoušek–Nešetřil) |
 | D Lemma 2.1 | [`PowerOfFew.Dense.lemma2_1`](PowerOfFew/Dense/DayOne.lean#L873) | Berry–Esseen (assumed) |
-| D Thm 2.2 (Berry–Esseen) | [`PowerOfFew.ShevtsovaBerryEsseen`](Challenge.lean#L207) | – |
+| D Thm 2.2 (Berry–Esseen) | [`PowerOfFew.ShevtsovaBerryEsseen`](Challenge.lean#L205) | – |
 | D Lemma 2.3 | [`PowerOfFew.Dense.lemma2_3`](PowerOfFew/Dense/BinomialDifference.lean#L81) | Berry–Esseen (assumed) |
 | D Lemma 2.4 | [`PowerOfFew.Dense.lemma2_4`](PowerOfFew/Dense/BinomialDifference.lean#L122) | Berry–Esseen (assumed) |
 | D Claim 2.5 | [`PowerOfFew.Dense.claim2_5`](PowerOfFew/Dense/DayOne.lean#L317) | Berry–Esseen (assumed) |
@@ -509,29 +531,29 @@ result uses only the standard axioms):
 | D Lemma 3.4 | [`PowerOfFew.Dense.lemma3_4`](PowerOfFew/Dense/Shrinking.lean#L464) | Hoeffding, central binomial bound (Matoušek–Nešetřil) |
 | D Lemma 3.5 | [`PowerOfFew.Dense.lemma3_5`](PowerOfFew/Dense/Shrinking.lean#L557) | Hoeffding, central binomial bound (Matoušek–Nešetřil) |
 | D Lemma 3.6 | [`PowerOfFew.Dense.lemma3_6`](PowerOfFew/Dense/Shrinking.lean#L684) | Hoeffding, central binomial bound (Matoušek–Nešetřil) |
-| D App. A | [`PowerOfFew.Dense.appendixA`](PowerOfFew/Dense/Appendix.lean#L154) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
-| S Thm 1.2 | [`PowerOfFew.Sparse.theorem1_2`](PowerOfFew/Sparse/Main.lean#L232) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
-| S Thm 1.4 | [`PowerOfFew.Sparse.theorem1_4`](PowerOfFew/Sparse/RandomColoring.lean#L85) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
-| S Thm 1.5 | [`PowerOfFew.Sparse.theorem1_5`](PowerOfFew/Sparse/RandomColoring.lean#L278) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
-| S Thm 1.7 | [`PowerOfFew.Sparse.theorem1_7`](PowerOfFew/Sparse/Activation.lean#L334) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
+| D App. A | [`PowerOfFew.Dense.appendixA`](PowerOfFew/Dense/Appendix.lean#L154) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
+| S Thm 1.2 | [`PowerOfFew.Sparse.theorem1_2`](PowerOfFew/Sparse/Main.lean#L232) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
+| S Thm 1.4 | [`PowerOfFew.Sparse.theorem1_4`](PowerOfFew/Sparse/RandomColoring.lean#L85) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
+| S Thm 1.5 | [`PowerOfFew.Sparse.theorem1_5`](PowerOfFew/Sparse/RandomColoring.lean#L278) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
+| S Thm 1.7 | [`PowerOfFew.Sparse.theorem1_7`](PowerOfFew/Sparse/Activation.lean#L334) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
 | S Lemma 2.1 | [`PowerOfFew.Sparse.lemma2_1`](PowerOfFew/Sparse/DayOne.lean#L607) | Berry–Esseen (assumed) |
 | S Prop 2.2 | [`PowerOfFew.Sparse.proposition2_2`](PowerOfFew/Sparse/DayOne.lean#L469) | Berry–Esseen (assumed) |
 | S Lemma 2.3 | [`PowerOfFew.Sparse.lemma2_3`](PowerOfFew/Sparse/DayTwo.lean#L652) | entropy bound for C(n, k) |
 | S Lemma 2.4 | [`PowerOfFew.Sparse.lemma2_4`](PowerOfFew/Sparse/DayTwo.lean#L814) | entropy bound for C(n, k) |
-| S Lemma 2.5 | [`PowerOfFew.Sparse.lemma2_5`](PowerOfFew/Sparse/DayThree.lean#L98) | – |
-| S Lemma 2.6 | [`PowerOfFew.Sparse.lemma2_6`](PowerOfFew/Sparse/DayThree.lean#L395) | BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff |
-| S Thm 3.1 | [`PowerOfFew.Sparse.theorem3_1`](PowerOfFew/Sparse/Subconnectivity.lean#L641) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), entropy bound for C(n, k), period two (Goles–Olivos) |
-| S Thm 4.1 | [`PowerOfFew.Sparse.theorem4_1`](PowerOfFew/Sparse/Activation.lean#L217) | Berry–Esseen (assumed), BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
+| S Lemma 2.5 | [`PowerOfFew.Sparse.lemma2_5`](PowerOfFew/Sparse/DayThree.lean#L97) | – |
+| S Lemma 2.6 | [`PowerOfFew.Sparse.lemma2_6`](PowerOfFew/Sparse/DayThree.lean#L394) | Feige–Ofek bound, Chernoff |
+| S Thm 3.1 | [`PowerOfFew.Sparse.theorem3_1`](PowerOfFew/Sparse/Subconnectivity.lean#L641) | Berry–Esseen (assumed), Feige–Ofek bound, entropy bound for C(n, k), period two (Goles–Olivos) |
+| S Thm 4.1 | [`PowerOfFew.Sparse.theorem4_1`](PowerOfFew/Sparse/Activation.lean#L217) | Berry–Esseen (assumed), Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
 | S Prop 4.2 | [`PowerOfFew.Sparse.proposition4_2`](PowerOfFew/Sparse/ActivationDayOne.lean#L855) | Berry–Esseen (assumed), Chernoff |
-| S Prop 4.3 | [`PowerOfFew.Sparse.proposition4_3`](PowerOfFew/Sparse/ActivationShrinking.lean#L1829) | BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed), Chernoff, entropy bound for C(n, k) |
+| S Prop 4.3 | [`PowerOfFew.Sparse.proposition4_3`](PowerOfFew/Sparse/ActivationShrinking.lean#L1829) | Feige–Ofek bound, Chernoff, entropy bound for C(n, k) |
 | S Prop 4.4 | [`PowerOfFew.Sparse.proposition4_4`](PowerOfFew/Sparse/ActivationLastDays.lean#L832) | Chernoff |
-| S Thm A.1 (Berry–Esseen) | [`PowerOfFew.ShevtsovaBerryEsseen`](Challenge.lean#L207) | – |
+| S Thm A.1 (Berry–Esseen) | [`PowerOfFew.ShevtsovaBerryEsseen`](Challenge.lean#L205) | – |
 | S Cor A.2 | [`PowerOfFew.Sparse.corollaryA_2`](PowerOfFew/Sparse/BerryEsseen.lean#L41) | Berry–Esseen (assumed) |
 | S Lemma A.3 | [`PowerOfFew.Sparse.lemmaA_3`](PowerOfFew/Sparse/BerryEsseen.lean#L140) | Berry–Esseen (assumed) |
 | S Lemma A.4 | [`PowerOfFew.Sparse.lemmaA_4`](PowerOfFew/Sparse/Degrees.lean#L124) | Chernoff |
 | S Lemma A.5 | [`PowerOfFew.Sparse.lemmaA_5`](PowerOfFew/Sparse/Degrees.lean#L676) | entropy bound for C(n, k) |
 | S Lemma A.6 | [`PowerOfFew.Sparse.lemmaA_6`](PowerOfFew/Sparse/Chernoff.lean#L47) | Chernoff |
-| S Lemma A.7 | [`PowerOfFew.Sparse.lemmaA_7`](PowerOfFew/Sparse/MatrixNorm.lean#L373) | BBK Thm 3.2 (assumed), BLM Thm 6.10 (assumed) |
+| S Lemma A.7 | [`PowerOfFew.Sparse.lemmaA_7`](PowerOfFew/Sparse/MatrixNorm.lean#L40) | Feige–Ofek bound |
 
 The route check (`python3 scripts/route_check.py check docs/paper_routes.tsv --accept
 docs/route_differences.tsv`) compares the numbered results each formal proof uses with those its
@@ -575,7 +597,9 @@ claims.
   Math.* 3 (1981) 93–105, and independently S. Poljak and M. Sůra, *Combinatorica* 3 (1983)
   119–121: majority dynamics on a finite graph is eventually periodic, with period at most two. The
   sparse paper uses only this fact (proof of Theorem 3.1), and calls the two works "independently
-  proven". It is proved in `External/GolesOlivos/` ([`blueAfter_eventually_period_two`](PowerOfFew/External/GolesOlivos/GolesOlivos.lean#L127)).
+  proven". It is proved in [`External/GolesOlivos/`](External/GolesOlivos), for symmetric threshold networks
+  ([`External.GolesOlivos.eventually_period_two`](External/GolesOlivos/GolesOlivos.lean#L133)), and applied to majority dynamics by
+  [`PowerOfFew.blueAfter_eventually_period_two`](PowerOfFew/Model/Majority.lean#L224).
 - **Majority dynamics as opinion exchange.** E. Mossel, J. Neeman and O. Tamuz, *Auton. Agents
   Multi-Agent Syst.* 28 (2014) (arXiv:1207.0893): on expanders, a sufficiently biased initial state
   leads to unanimity; the
@@ -700,7 +724,8 @@ claims.
   No formalization of the sharp bound `‖A − EA‖ = O(√(pn))` for sparse random matrices, or of
   Talagrand's inequality in the form of Boucheron–Lugosi–Massart's Theorem 6.10, was found in any
   system; [dududuguo/HighDimProb](https://github.com/dududuguo/HighDimProb) (Lean 4, 2026) proves the
-  matrix Bernstein inequality, which gives only `O(√(pn log n))`. Mathlib has Hoeffding's inequality;
+  matrix Bernstein inequality, which gives only `O(√(pn log n))`. This project proves the bound
+  for `G(n, p)` with `pn ≥ c log n`, by Feige and Ofek's argument (Section 2). Mathlib has Hoeffding's inequality;
   McDiarmid's is in the Lean libraries lean-rademacher and atlas-lean and in the Isabelle AFP
   (*Concentration_Inequalities*, 2023). The
   Goles–Olivos period-two theorem was not found in any system. Mathlib's binomial random graph
@@ -768,18 +793,25 @@ Plans for follow-up papers are in [`NEXT.md`](NEXT.md).
 
 ### The formalization
 
-- The three assumed results (Section 2): a Berry–Esseen bound with Shevtsova's constant is out of
-  reach; a general Berry–Esseen bound with a larger constant exists outside Mathlib, but with it the
-  arguments need larger thresholds (with constant 30, `D_c > 0` needs `c > 60`, so `pΔ > 60` and a
-  near-complete case up to `(1 − p)n ≈ 3600`), and the dense paper's explicit 90% at `n ≥ 1000` is
-  lost. The
-  spectral bound of Lemma A.7 could come from the Feige–Ofek argument (discrepancy and ε-nets), which
-  needs no concentration inequality beyond Chernoff's and would make the sparse paper depend on
-  Berry–Esseen only.
-- [`Basic/`](Basic) holds general results that could go to Mathlib: Chernoff's bounds in relative-entropy form,
-  Bernoulli families and the binomial law of their sums, the upper bound for the central binomial
-  coefficient and the entropy bound for binomial coefficients ([`Basic/README.md`](Basic/README.md) says where each could
-  go).
+- The assumed result (Section 2): a Berry–Esseen bound with Shevtsova's constant is out of reach
+  (its proof rests on computer-assisted estimates of characteristic functions). One with a larger
+  constant is within reach: a Lean proof with constant 30 exists outside Mathlib, and Stein's method
+  gives about 4.1 (Chen and Shao). With a constant `C`, the first-day estimate needs
+  `D_c = Φ₀(2 − 1/c) − C/c > 0`, that is `c ≥ 9` for `C = 4.1` and `c ≥ 63` for `C = 30` (for 0.56,
+  `c ≥ 1.4` suffices), so the sparse thresholds such as `pΔ ≥ 10` would grow or need a wider
+  near-complete case, and the dense paper's explicit 90% at `n ≥ 1000` is lost. A Berry–Esseen bound
+  with a Stein-method constant would make unconditional the results whose statements survive it.
+- Feige and Ofek's bound ([`External/FeigeOfek/`](External/FeigeOfek)) is, as far as the search of Section 10 found, the
+  first formal proof of a spectral bound `O(√(pn))` for sparse random graphs; with the grid net and
+  the Bernstein-type bound of [`Basic/`](Basic), it could go to Mathlib.
+- [`Basic/`](Basic) holds general results that could go to Mathlib: Chernoff's bounds in relative-entropy form and
+  the tail `(e p m / k)^k`, a Bernstein-type bound for weighted Bernoulli sums, Bernoulli families and
+  the binomial law of their sums, the binomial random graph as independent edge variables, a net of
+  the unit ball, the upper bound for the central binomial coefficient and the entropy bound for
+  binomial coefficients ([`Basic/README.md`](Basic/README.md) says where each could go).
+- [`External/`](External) holds what other formalizations citing the same sources could reuse: Goles and Olivos's
+  theorem for symmetric threshold networks, Feige and Ofek's bound, and the statements of Theorem
+  3.2 of Benaych-Georges–Bordenave–Knowles and Theorem 6.10 of Boucheron–Lugosi–Massart.
 - The activation model ([`PowerOfFew/Model/Lazy.lean`](PowerOfFew/Model/Lazy.lean): induced subgraphs of `G(n, p)`, independence of
   the days) and the edge-conditioning tools ([`PowerOfFew/Model/EdgeConditioning.lean`](PowerOfFew/Model/EdgeConditioning.lean)) are general
   tools for random-graph processes.

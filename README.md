@@ -1,6 +1,6 @@
 # The power of few: a Lean formalization of two papers on majority dynamics
 
-[![CI](https://github.com/vltanh/lean4-power-of-few-sparse/actions/workflows/lean_action_ci.yml/badge.svg)](https://github.com/vltanh/lean4-power-of-few-sparse/actions/workflows/lean_action_ci.yml)
+[![CI](https://github.com/vltanh/lean4-power-of-few/actions/workflows/lean_action_ci.yml/badge.svg)](https://github.com/vltanh/lean4-power-of-few/actions/workflows/lean_action_ci.yml)
 
 A Lean 4 / Mathlib formalization of two papers on majority dynamics on the Erdős–Rényi random graph
 `G(n, p)`, where every vertex adopts the colour of the majority of its neighbours, day after day:
@@ -16,13 +16,12 @@ A Lean 4 / Mathlib formalization of two papers on majority dynamics on the Erdő
   consequences for random colourings, the regime below connectivity, and a model with random
   activations and updates.
 
-**The formalization is conditional** on three cited results that Lean does not have, assumed as
-hypotheses named after their sources and stated in every theorem that uses them: the Berry–Esseen
-inequality with Shevtsova's constant 0.56 ([`ShevtsovaBerryEsseen`](Challenge.lean#L207)), Theorem 3.2 of
-Benaych-Georges, Bordenave and Knowles on the spectral norm of sparse random matrices
-([`BBKTheorem3_2`](Challenge.lean#L228)), and Theorem 6.10 of Boucheron, Lugosi and Massart (Talagrand's inequality,
-[`BLMTheorem6_10`](Challenge.lean#L244)). **Three theorems of the sparse paper are false as printed** (Theorems 1.5, 1.7,
-4.1); the formalization proves that they are false and proves corrected versions.
+**The formalization is conditional** on one cited result that Lean does not have, assumed as a
+hypothesis named after its source and stated in every theorem that uses it: the Berry–Esseen
+inequality with Shevtsova's constant 0.56 ([`ShevtsovaBerryEsseen`](Challenge.lean#L205)). The spectral bound
+`‖A − E A‖ = O(√(pn))`, which the sparse paper takes from two results on random matrices, is proved,
+by Feige and Ofek's argument. **Three theorems of the sparse paper are false as printed** (Theorems
+1.5, 1.7, 4.1); the formalization proves that they are false and proves corrected versions.
 
 ## What is proved
 
@@ -30,10 +29,11 @@ Benaych-Georges, Bordenave and Knowles on the spectral norm of sparse random mat
   1.3, 1.5, 1.6, Lemmas 2.1–3.6 and Appendix A; the sparse paper's Theorems 1.2, 1.4, 1.5, 1.7, 3.1,
   4.1, its lemmas and propositions of Sections 2–4 and Appendix A. The corrected statements are
   explained in [REPORT.md](REPORT.md), Sections 4 and 6.
-- The cited results they use, except the three above: Hoeffding's and Chernoff's inequalities, the
+- The cited results they use, except Berry–Esseen: Hoeffding's and Chernoff's inequalities, the
   bound `C(2m, m) < 4^m/√(2m)`, the entropy bound for binomial coefficients, and the theorem of Goles
-  and Olivos that majority dynamics is eventually periodic with period at most two
-  ([REPORT.md](REPORT.md), Section 2).
+  and Olivos that majority dynamics is eventually periodic with period at most two; and, in place of
+  the two results on random matrices that the sparse paper cites for its Lemma A.7, Feige and Ofek's
+  bound on the spectral norm of `G(n, p)` ([REPORT.md](REPORT.md), Section 2).
 - `lake build` succeeds; the only `sorry`s are the statements of record in
   [`Challenge.lean`](Challenge.lean), and there is no `axiom`. `lake env lean scripts/Audit.lean`
   checks that every declaration of the library uses only [`propext`](https://leanprover-community.github.io/mathlib4_docs/Init/Core.html#propext), [`Classical.choice`](https://leanprover-community.github.io/mathlib4_docs/Init/Prelude.html#Classical.choice) and
@@ -42,30 +42,30 @@ Benaych-Georges, Bordenave and Knowles on the spectral norm of sparse random mat
 ## The main results
 
 The statements of record are in [`Challenge.lean`](Challenge.lean), in Mathlib's vocabulary with the
-definitions they need ([`gnpProb`](Challenge.lean#L86) is the probability under Mathlib's `SimpleGraph.binomialRandom`;
+definitions they need ([`gnpProb`](Challenge.lean#L84) is the probability under Mathlib's `SimpleGraph.binomialRandom`;
 `blueAfter G B₀ t` is the Blue set after `t` days; `Φ` is the standard normal distribution function,
-identified with Mathlib's Gaussian law by [`Challenge.Φ_eq_cdf_gaussianReal`](Challenge.lean#L405)):
+identified with Mathlib's Gaussian law by [`Challenge.Φ_eq_cdf_gaussianReal`](Challenge.lean#L365)):
 
-- [`Challenge.dense_theorem1_6`](Challenge.lean#L267): the explicit four-day bound of the dense paper, with failure
+- [`Challenge.dense_theorem1_6`](Challenge.lean#L230): the explicit four-day bound of the dense paper, with failure
   probabilities `P₁, …, P₄`;
-- [`Challenge.dense_theorem1_2`](Challenge.lean#L283): on `G(n, 1/2)` with `n ≥ 1000`, if Red has at least `n/2 + 5`
+- [`Challenge.dense_theorem1_2`](Challenge.lean#L246): on `G(n, 1/2)` with `n ≥ 1000`, if Red has at least `n/2 + 5`
   vertices, Red wins after four days with probability at least 0.9;
-- [`Challenge.dense_theorem1_3`](Challenge.lean#L289): for constant `p`, a lead of `c` wins after four days with probability
+- [`Challenge.dense_theorem1_3`](Challenge.lean#L252): for constant `p`, a lead of `c` wins after four days with probability
   at least `1 − K(p) max{1/n, 1/c²}`;
-- [`Challenge.sparse_theorem1_2`](Challenge.lean#L295): if `n − 10 ≥ pn ≥ (1 + λ) log n` and `pΔ ≥ 10`, Red wins within
+- [`Challenge.sparse_theorem1_2`](Challenge.lean#L258): if `n − 10 ≥ pn ≥ (1 + λ) log n` and `pΔ ≥ 10`, Red wins within
   `O(log n/log(pn))` days with probability at least `1 − O(1/min{n, pΔ²} + n^(−λ/2))`;
-- [`Challenge.sparse_theorem1_4`](Challenge.lean#L307): with a uniformly random colouring and `p ≥ λ n^(−1/2)`, the larger
+- [`Challenge.sparse_theorem1_4`](Challenge.lean#L269): with a uniformly random colouring and `p ≥ λ n^(−1/2)`, the larger
   side wins within `O(1)` days with probability at least `1 − ε` (a delayed form of the theorem of
   Fountoulakis, Kang and Makai);
-- [`Challenge.sparse_theorem1_5`](Challenge.lean#L316): with a random colouring biased towards Red by
+- [`Challenge.sparse_theorem1_5`](Challenge.lean#L277): with a random colouring biased towards Red by
   `ω(max{(pn)⁻¹, n^(−1/2)})`, Red wins with probability `1 − o(1)`; the printed bias `ω((pn)⁻¹)` does
-  not suffice ([`Challenge.sparse_theorem1_5_printed_false`](Challenge.lean#L326));
-- [`Challenge.sparse_theorem3_1`](Challenge.lean#L335): below the connectivity threshold, `p = (1 − λ) log n/n`, the process
+  not suffice ([`Challenge.sparse_theorem1_5_printed_false`](Challenge.lean#L286));
+- [`Challenge.sparse_theorem3_1`](Challenge.lean#L295): below the connectivity threshold, `p = (1 − λ) log n/n`, the process
   ends in period at most two with few Blue vertices, of small average degree;
-- [`Challenge.sparse_theorem1_7`](Challenge.lean#L352), [`Challenge.sparse_theorem4_1`](Challenge.lean#L364): with random activations and updates,
+- [`Challenge.sparse_theorem1_7`](Challenge.lean#L312), [`Challenge.sparse_theorem4_1`](Challenge.lean#L324): with random activations and updates,
   Red wins provided its lead is at least of order `√(n/p_ac)`; without that hypothesis the printed
-  theorems are false ([`Challenge.sparse_theorem1_7_printed_false_seq`](Challenge.lean#L378),
-  [`Challenge.sparse_theorem4_1_printed_false_seq`](Challenge.lean#L390)).
+  theorems are false ([`Challenge.sparse_theorem1_7_printed_false_seq`](Challenge.lean#L338),
+  [`Challenge.sparse_theorem4_1_printed_false_seq`](Challenge.lean#L350)).
 
 ## Palomar
 
@@ -102,8 +102,10 @@ the TeX sources by a second reader.
   hypotheses, Lemma 2.6 for part of its proof, Lemma A.4 without a concentration step,
   Benaych-Georges–Bordenave–Knowles with a different normalization; E15, E23, E24, E26) do not affect
   the results.
-- **Proofs.** Every proof follows its paper's argument; nineteen depart from it at one or more steps
-  (eighteen departures), each to repair a step that is wrong or has a gap (the report's Section 7). The route check
+- **Proofs.** Every proof follows its paper's argument, except that of Lemma A.7, which uses Feige and
+  Ofek's argument at the author's request; nineteen results depart from their paper's proof at one or
+  more steps (nineteen departures: eighteen repair a step that is wrong or has a gap, the nineteenth
+  is Lemma A.7's; the report's Section 7). The route check
   ([`scripts/route_check.py`](scripts/route_check.py)) confirms that each proof uses the results its paper's proof cites.
 
 ## Credits
@@ -134,8 +136,9 @@ the TeX sources by a second reader.
 
 With random activations, the natural question is the exact threshold for the initial gap, which the
 corrected theorems put at order `√(n/p_ac)`; the papers' own conjectures on the optimal advantage and
-on the regime below connectivity remain open. The three assumed results are the formalization's own
-next step: the spectral bound could come from the Feige–Ofek argument. See [REPORT.md](REPORT.md),
+on the regime below connectivity remain open. For the formalization, the one assumed result remains:
+with a provable Berry–Esseen constant (Stein's method gives about 4.1), the results whose statements
+survive it would become unconditional. See [REPORT.md](REPORT.md),
 Section 11, and, for papers that could follow, [`NEXT.md`](NEXT.md).
 
 ## Building
@@ -154,14 +157,20 @@ run `python3 scripts/sync_challenge_defs.py` (CI runs it with `--check`). After 
 
 ## Layout
 
+Three libraries, each importing only Mathlib, the libraries before it in this list, and itself:
+
+| Library | Contents |
+| --- | --- |
+| [`Basic/`](Basic) | general mathematics, importing only Mathlib: Bernoulli families, Chebyshev, Hoeffding, Chernoff and Bernstein-type bounds, binomial coefficients, the binomial random graph as independent edge variables, a net of the unit ball, two elementary inequalities ([`Basic/README.md`](Basic/README.md)) |
+| [`External/`](External) | the results of other works, in their sources' terms, one directory per source with a README: `GolesOlivos` and `FeigeOfek` (proved); `BenaychGeorgesBordenaveKnowles` and `BoucheronLugosiMassart` (stated, hypotheses only of the paper's own derivation of Lemma A.7); `BerryEsseen` (assumed; its statement is in [`PowerOfFew/Defs.lean`](PowerOfFew/Defs.lean), because the Challenge uses it); `Hoeffding`, `Chernoff`, `Invitation` (proved in [`Basic/`](Basic)) |
+| [`PowerOfFew/`](PowerOfFew) | the two papers, with the bridges that apply the results of [`External/`](External) |
+
 | Module | Contents |
 | --- | --- |
-| [`PowerOfFew/Defs.lean`](PowerOfFew/Defs.lean) | the shared definitions: `G(n, p)`, majority dynamics, random colourings, the activation model, `Φ`, the dense paper's `F`, `P₁, …, P₄`, and the three assumed results |
-| [`PowerOfFew/Model/`](PowerOfFew/Model) | `G(n, p)` as independent edge variables and its probability rules (`Gnp`), conditioning on one edge (`EdgeConditioning`), majority dynamics (`Majority`), `Φ` (`Normal`), Berry–Esseen for signed Bernoulli sums (`BerryEsseen`), the activation model (`Lazy`) |
+| [`PowerOfFew/Defs.lean`](PowerOfFew/Defs.lean) | the shared definitions: `G(n, p)`, majority dynamics, random colourings, the activation model, `Φ`, the dense paper's `F`, `P₁, …, P₄`, and the assumed Berry–Esseen inequality |
+| [`PowerOfFew/Model/`](PowerOfFew/Model) | the rules for [`gnpProb`](Challenge.lean#L84) (`Gnp`), conditioning on one edge (`EdgeConditioning`), majority dynamics and its period two (`Majority`), `Φ` (`Normal`), Berry–Esseen for signed Bernoulli sums (`BerryEsseen`), the activation model (`Lazy`) |
 | [`PowerOfFew/Dense/`](PowerOfFew/Dense) | `BinomialDifference` (Lemmas 2.3, 2.4), `DayOne` (Claims 2.5, 2.6, Lemma 2.1), `Shrinking` (Lemmas 3.2–3.6), `Main` (Theorems 1.6, 1.2, 1.3), `Appendix` (Theorem 1.5, Appendix A) |
-| [`PowerOfFew/Sparse/`](PowerOfFew/Sparse) | `BerryEsseen` (Corollary A.2, Lemma A.3), `DayOne` (Proposition 2.2, Lemma 2.1), `DayTwo` (Lemmas 2.3, 2.4), `DayThree` (Lemmas 2.5, 2.6), `Main` (Theorem 1.2), `Degrees` (Lemmas A.4, A.5), `Chernoff` (Lemma A.6), `MatrixNorm` (Lemma A.7), `Subconnectivity` (Theorem 3.1), `ColoringAux` and `RandomColoring` (Theorems 1.4, 1.5), `ActivationDayOne`, `ActivationShrinking`, `ActivationLastDays` (Propositions 4.2–4.4), `Activation` (Theorems 4.1, 1.7), `ActivationCounterexample` (the printed Theorems 1.7, 4.1 are false) |
-| [`PowerOfFew/External/`](PowerOfFew/External) | one directory per cited result, with a README: `BerryEsseen`, `RandomMatrix` (assumed); `Hoeffding`, `Chernoff`, `Invitation`, `GolesOlivos` (proved) |
-| [`Basic/`](Basic) | general mathematics, importing only Mathlib: Bernoulli families, Chebyshev, Hoeffding and Chernoff bounds, binomial coefficients, two elementary inequalities ([`Basic/README.md`](Basic/README.md)) |
+| [`PowerOfFew/Sparse/`](PowerOfFew/Sparse) | `BerryEsseen` (Corollary A.2, Lemma A.3), `DayOne` (Proposition 2.2, Lemma 2.1), `DayTwo` (Lemmas 2.3, 2.4), `DayThree` (Lemmas 2.5, 2.6), `Main` (Theorem 1.2), `Degrees` (Lemmas A.4, A.5), `Chernoff` (Lemma A.6), `MatrixNorm` (Lemma A.7, by Feige and Ofek's argument), `MatrixNormDerivation` (the paper's derivation of Lemma A.7 from its two cited results), `Subconnectivity` (Theorem 3.1), `ColoringAux` and `RandomColoring` (Theorems 1.4, 1.5), `ActivationDayOne`, `ActivationShrinking`, `ActivationLastDays` (Propositions 4.2–4.4), `Activation` (Theorems 4.1, 1.7), `ActivationCounterexample` (the printed Theorems 1.7, 4.1 are false) |
 | [`Challenge.lean`](Challenge.lean), [`Solution.lean`](Solution.lean), [`comparator.json`](comparator.json) | the statements of record and their proofs, for Comparator |
 | [`scripts/`](scripts) | `Audit.lean`, the route check, the copy of the shared definitions, the documents' links and tables |
 | [`docs/`](docs) | `paper_routes.tsv` (the results each paper proof cites), `route_differences.tsv` (the recorded differences) |
@@ -172,6 +181,8 @@ run `python3 scripts/sync_challenge_defs.py` (CI runs it with `--check`). After 
 every push and pull request, checks that the audit imports every module, runs the audit and the route
 check, and checks the Challenge's copy of the shared definitions, the documents' links and the
 Markdown tables. It needs no settings.
+[`.github/workflows/palomar_preflight.yml`](.github/workflows/palomar_preflight.yml) runs Palomar's
+verification on demand (`gh workflow run palomar_preflight.yml --ref main`).
 
 ## License
 

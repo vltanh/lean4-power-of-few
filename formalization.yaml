@@ -7,9 +7,10 @@ project:
     A conditional formalization of two papers on majority dynamics on the Erdős–Rényi random graph
     G(n, p): L. Tran and V. Vu, "Reaching a consensus on random networks: the power of few"
     (Theory of Computing 19, 2023), and B. Tran and V. Vu, "The 'Power of Few' phenomenon: the sparse
-    case" (Random Structures & Algorithms 66, 2025). It assumes, as named hypotheses, the Berry–Esseen
-    inequality with Shevtsova's constant 0.56, Theorem 3.2 of Benaych-Georges, Bordenave and Knowles,
-    and Theorem 6.10 of Boucheron, Lugosi and Massart.
+    case" (Random Structures & Algorithms 66, 2025). It assumes, as a named hypothesis, the
+    Berry–Esseen inequality with Shevtsova's constant 0.56. The sparse paper's spectral bound, which
+    it takes from Theorem 3.2 of Benaych-Georges, Bordenave and Knowles and Theorem 6.10 of
+    Boucheron, Lugosi and Massart, is proved by Feige and Ofek's argument.
 
 
     Proved: for constant p, a lead of c vertices wins within four days with probability
@@ -67,7 +68,7 @@ sources:
     type: "article"
     location: "Ann. Inst. H. Poincaré Probab. Statist. 56 (2020) 2141–2161; arXiv:1704.02945"
     relationship: "background"
-    note: "Theorem 3.2 is assumed, not proved: the hypothesis BBKTheorem3_2."
+    note: "Theorem 3.2 is stated (External/BenaychGeorgesBordenaveKnowles) and is a hypothesis only of the formalized derivation PowerOfFew.Sparse.lemmaA_7_of_bbk_blm; no result assumes it."
   - title: "Concentration Inequalities: A Nonasymptotic Theory of Independence"
     authors:
       - "S. Boucheron"
@@ -77,7 +78,16 @@ sources:
     type: "book"
     location: "Oxford University Press (2013)"
     relationship: "background"
-    note: "Theorem 6.10 is assumed, not proved: the hypothesis BLMTheorem6_10."
+    note: "Theorem 6.10 is stated (External/BoucheronLugosiMassart) and is a hypothesis only of the formalized derivation PowerOfFew.Sparse.lemmaA_7_of_bbk_blm; no result assumes it."
+  - title: "Spectral techniques applied to sparse random graphs"
+    authors:
+      - "U. Feige"
+      - "E. Ofek"
+    id: "doi:10.1002/rsa.20089"
+    type: "article"
+    location: "Random Structures & Algorithms 27 (2005) 251–275"
+    relationship: "background"
+    note: "Its bound on the spectral norm of G(n, p) is proved in External/FeigeOfek, following the presentation of Chin, Rao and Vu (COLT 2015, arXiv:1501.05021), and replaces the two cited results above in the proof of the sparse paper's Lemma A.7."
   - title: "Comportement périodique des fonctions à seuil binaires et applications"
     authors:
       - "E. Goles"
@@ -86,7 +96,7 @@ sources:
     type: "article"
     location: "Discrete Applied Mathematics 3 (1981) 93–105"
     relationship: "background"
-    note: "Proved in PowerOfFew/External/GolesOlivos (period at most two)."
+    note: "Proved in External/GolesOlivos for symmetric threshold networks (period at most two), and applied to majority dynamics in PowerOfFew/Model/Majority.lean."
   - title: "Invitation to Discrete Mathematics"
     authors:
       - "J. Matoušek"
@@ -114,10 +124,12 @@ related_formalizations:
 
 status:
   scope: >-
-    Conditional on three assumed results, stated as hypotheses named after their sources in every
-    theorem that uses them: ShevtsovaBerryEsseen, BBKTheorem3_2, BLMTheorem6_10. Every result the two
-    papers prove is formalized and proved by the papers' arguments, with the readings, corrections and
-    departures listed under fidelity. The sparse paper's Theorems 1.5, 1.7 and 4.1 are false as
+    Conditional on one assumed result, stated as a hypothesis named after its source in every theorem
+    that uses it: ShevtsovaBerryEsseen. Every result the two papers prove is formalized and proved,
+    by the papers' arguments except the sparse Lemma A.7, which is proved by Feige and Ofek's argument
+    at the author's request (the paper's own derivation from its two cited results is formalized too,
+    with those results as hypotheses); the readings, corrections and departures are listed under
+    fidelity. The sparse paper's Theorems 1.5, 1.7 and 4.1 are false as
     printed; counterexamples (unconditional) and corrected versions are proved. Not formalized: the
     papers' conjectures and numerical experiments, the dense paper's restatement of the theorem of
     Fountoulakis, Kang and Makai (its delayed form is proved), and remarks.
@@ -151,9 +163,8 @@ automation:
 
 fidelity:
   divergences: >-
-    Conditional formalization: the Berry–Esseen inequality with constant 0.56 (Shevtsova), Theorem 3.2
-    of Benaych-Georges–Bordenave–Knowles and Theorem 6.10 of Boucheron–Lugosi–Massart are assumed as
-    hypotheses. Corrected statements (agreed with the user): sparse Theorem 1.5 assumes a bias
+    Conditional formalization: the Berry–Esseen inequality with constant 0.56 (Shevtsova) is assumed as
+    a hypothesis. Corrected statements (agreed with the user): sparse Theorem 1.5 assumes a bias
     ω(max{(pn)⁻¹, n^(−1/2)}); sparse Theorems 1.7 and 4.1 assume p_ac^(1/2) Δ ≥ S_ε n^(1/2) with a
     failure probability ε, and (1 − p) p_ac n ≥ 10, which the proofs use; Theorem 1.7's
     p p_ac n ≥ (1 + λ) n⁻¹ log n is read as (1 + λ) log n; counterexamples to the printed versions are
@@ -174,7 +185,12 @@ fidelity:
     2.3, 2.4 (an exact proof of the cube-root inequality), 2.6 (one more day), Theorem 1.2 (c = 3 for
     the paper's 10), Theorems 1.4, 1.5 and the dense Theorem 1.5 (the near-complete case
     p > 1 − 10/n), Theorem 3.1 (|B_t| ≤ n/4), Propositions 4.2 (c = 2; a wider Chernoff band) and 4.4
-    (a concentration step before Lemma A.4), Lemmas A.5 and A.7 (repaired thresholds and cases).
+    (a concentration step before Lemma A.4), Lemmas A.5 and A.7 (repaired thresholds and cases, in the
+    paper's derivation lemmaA_7_of_bbk_blm). Departure of a whole argument, at the author's request:
+    the sparse Lemma A.7 is proved by Feige and Ofek's argument (a net of the unit ball, light pairs by
+    an exponential-moment bound, heavy pairs by bounded degrees and discrepancy) instead of the paper's
+    derivation from Theorem 3.2 of Benaych-Georges–Bordenave–Knowles and Theorem 6.10 of
+    Boucheron–Lugosi–Massart, whose proofs need mathematics Lean lacks.
 
 review:
   status: "agent-reviewed"
@@ -209,17 +225,17 @@ alignment:
     - source: "Sparse paper, Theorem 1.2"
       lean: "Challenge.sparse_theorem1_2"
       module: "Challenge"
-      status: "proved, conditional on all three assumed results"
+      status: "proved, conditional on ShevtsovaBerryEsseen"
       note: "As printed; the constants may depend on λ."
     - source: "Sparse paper, Theorem 1.4"
       lean: "Challenge.sparse_theorem1_4"
       module: "Challenge"
-      status: "proved, conditional on all three assumed results"
+      status: "proved, conditional on ShevtsovaBerryEsseen"
       note: "Delayed form of the theorem of Fountoulakis, Kang and Makai; a tie counts as a failure."
     - source: "Sparse paper, Theorem 1.5 (corrected)"
       lean: "Challenge.sparse_theorem1_5"
       module: "Challenge"
-      status: "proved, conditional on all three assumed results"
+      status: "proved, conditional on ShevtsovaBerryEsseen"
       note: "Bias ω(max{(pn)⁻¹, n^(−1/2)}); the printed bias ω((pn)⁻¹) does not suffice."
     - source: "Sparse paper, Theorem 1.5 as printed"
       lean: "Challenge.sparse_theorem1_5_printed_false"
@@ -229,17 +245,17 @@ alignment:
     - source: "Sparse paper, Theorem 3.1"
       lean: "Challenge.sparse_theorem3_1"
       module: "Challenge"
-      status: "proved, conditional on all three assumed results"
+      status: "proved, conditional on ShevtsovaBerryEsseen"
       note: "As printed, with explicit constants depending on λ."
     - source: "Sparse paper, Theorem 1.7 (corrected)"
       lean: "Challenge.sparse_theorem1_7"
       module: "Challenge"
-      status: "proved, conditional on all three assumed results"
+      status: "proved, conditional on ShevtsovaBerryEsseen"
       note: "Assumes Δ ≥ S√n and (1 − p) p_ac n ≥ 10, with failure probability ε."
     - source: "Sparse paper, Theorem 4.1 (corrected)"
       lean: "Challenge.sparse_theorem4_1"
       module: "Challenge"
-      status: "proved, conditional on all three assumed results"
+      status: "proved, conditional on ShevtsovaBerryEsseen"
       note: "Assumes p_ac^(1/2) Δ ≥ S_ε n^(1/2) and (1 − p) p_ac n ≥ 10, with failure probability ε."
     - source: "Sparse paper, Theorem 1.7 as printed"
       lean: "Challenge.sparse_theorem1_7_printed_false_seq"
