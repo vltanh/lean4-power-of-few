@@ -6,9 +6,11 @@ public import Mathlib
 # A grid net of the Euclidean unit ball
 
 `gridNet n` is the set of points `z / (4√n)` with `z ∈ ℤⁿ` and `∑ zᵢ² ≤ 16 n`. It lies in the unit
-ball of `ℝⁿ`, it has at most `(33 e)ⁿ` points, and every point `x` of the unit ball lies within
-`1/4` of one of its points (round each coordinate of `4√n x` toward zero). Hence the operator norm of
-a square matrix is at most twice the largest value of its bilinear form on the net.
+ball of `ℝⁿ` (`sum_sq_le_one_of_mem_gridNet`), it has at most `(33 e)ⁿ` points (`card_gridNet_le`),
+and every point `x` of the unit ball lies within `1/4` of one of its points
+(`exists_mem_gridNet_sum_sq_sub_le`: round each coordinate of `4√n x` toward zero). Hence the
+operator norm of a square matrix is at most twice the largest value of its bilinear form on the net
+(`Matrix.norm_toEuclideanCLM_le_of_gridNet`).
 
 Feige and Ofek bound the spectral norm of a random graph through such a net
 (`PowerOfFew.FeigeOfek.feigeOfek`). The bound on the number of points is the exponential-moment
@@ -28,7 +30,7 @@ def gridNet (n : ℕ) : Finset (Fin n → ℝ) := by
       fun z => ∑ i, z i ^ 2 ≤ 16 * (n : ℤ)).image fun z i => (z i : ℝ) / (4 * Real.sqrt n)
 
 /-- The origin (`z = 0`) is a point of the net. -/
-private theorem fo2Aux_zero_mem (n : ℕ) : (0 : Fin n → ℝ) ∈ gridNet n := by
+theorem zero_mem_gridNet (n : ℕ) : (0 : Fin n → ℝ) ∈ gridNet n := by
   unfold gridNet
   refine Finset.mem_image.mpr ⟨0, Finset.mem_filter.mpr ⟨Fintype.mem_piFinset.mpr fun i => ?_, ?_⟩,
     ?_⟩
@@ -58,7 +60,7 @@ theorem sum_sq_le_one_of_mem_gridNet {n : ℕ} {x : Fin n → ℝ} (hx : x ∈ g
 /-- `∑_{m ∈ s} e^(−m²/16) ≤ 33` for every finite set `s` of integers: with `r = e^(−1/16)`,
 `e^(−m²/16) ≤ r^|m|` (as `m² ≥ |m|`), `∑_{m ∈ ℤ} r^|m| = 1 + 2r/(1 − r) = 1 + 2/(e^(1/16) − 1)`, and
 `e^(1/16) − 1 ≥ 1/16`. -/
-private theorem fo2Aux_sum_exp_neg_sq_le (s : Finset ℤ) :
+private theorem sum_exp_neg_sq_div_le (s : Finset ℤ) :
     ∑ m ∈ s, Real.exp (-(m : ℝ) ^ 2 / 16) ≤ 33 := by
   set r := Real.exp (-(1 / 16)) with hr
   have hr0 : 0 ≤ r := (Real.exp_pos _).le
@@ -97,7 +99,8 @@ private theorem fo2Aux_sum_exp_neg_sq_le (s : Finset ℤ) :
 
 /-- Counting by an exponential moment: if `f ≥ 0` on `s` and `f ≥ 1` where `p` holds, then
 `#{a ∈ s : p a} ≤ ∑_{a ∈ s} f a`. -/
-private theorem fo2Aux_card_filter_le {α : Type*} (s : Finset α) (p : α → Prop) [DecidablePred p]
+private theorem card_filter_le_sum_of_one_le {α : Type*} (s : Finset α) (p : α → Prop)
+    [DecidablePred p]
     (f : α → ℝ) (hf0 : ∀ a ∈ s, 0 ≤ f a) (hf1 : ∀ a ∈ s, p a → 1 ≤ f a) :
     ((s.filter p).card : ℝ) ≤ ∑ a ∈ s, f a := by
   rw [Finset.card_filter]
@@ -111,7 +114,7 @@ private theorem fo2Aux_card_filter_le {α : Type*} (s : Finset α) (p : α → P
 theorem card_gridNet_le (n : ℕ) : ((gridNet n).card : ℝ) ≤ (33 * Real.exp 1) ^ n := by
   unfold gridNet
   -- `#net ≤ #{z ∈ box : ∑ zᵢ² ≤ 16 n} ≤ ∑_{z ∈ box} ∏ᵢ e · e^(−zᵢ²/16)`
-  refine (Nat.cast_le.mpr Finset.card_image_le).trans ((fo2Aux_card_filter_le _ _
+  refine (Nat.cast_le.mpr Finset.card_image_le).trans ((card_filter_le_sum_of_one_le _ _
     (fun z => ∏ i, (Real.exp 1 * Real.exp (-(z i : ℝ) ^ 2 / 16))) (fun z _ => by positivity)
     (fun z _ hz => ?_)).trans ?_)
   · -- `∏ᵢ e · e^(−zᵢ²/16) = e^(n − ∑ zᵢ²/16) ≥ 1` when `∑ zᵢ² ≤ 16 n`
@@ -131,16 +134,16 @@ theorem card_gridNet_le (n : ℕ) : ((gridNet n).card : ℝ) ≤ (33 * Real.exp 
       _ ≤ ∏ _i : Fin n, (33 * Real.exp 1) := by
           refine Finset.prod_le_prod₀ (fun _ _ => by positivity) fun _ _ => ?_
           rw [← Finset.mul_sum, mul_comm]
-          exact mul_le_mul_of_nonneg_right (fo2Aux_sum_exp_neg_sq_le _) (Real.exp_pos 1).le
+          exact mul_le_mul_of_nonneg_right (sum_exp_neg_sq_div_le _) (Real.exp_pos 1).le
       _ = (33 * Real.exp 1) ^ n := by simp
 
 /-- Rounding toward zero: a point `v` of the unit ball lies within squared distance `1/16` of the
 point `z / (4√n)` of the net, `zᵢ = sign(vᵢ) ⌊4√n |vᵢ|⌋`: `|zᵢ| ≤ 4√n |vᵢ|` (so `∑ zᵢ² ≤ 16 n`) and
 `|vᵢ − zᵢ / (4√n)| ≤ 1 / (4√n)`. -/
-private theorem fo2Aux_exists_near {n : ℕ} (v : Fin n → ℝ) (hv : ∑ i, v i ^ 2 ≤ 1) :
+theorem exists_mem_gridNet_sum_sq_sub_le {n : ℕ} (v : Fin n → ℝ) (hv : ∑ i, v i ^ 2 ≤ 1) :
     ∃ x ∈ gridNet n, ∑ i, (v i - x i) ^ 2 ≤ 1 / 16 := by
   rcases Nat.eq_zero_or_pos n with rfl | hn
-  · exact ⟨0, fo2Aux_zero_mem 0, by simp⟩
+  · exact ⟨0, zero_mem_gridNet 0, by simp⟩
   have hnR : (1 : ℝ) ≤ n := by exact_mod_cast hn
   set c := 4 * Real.sqrt n with hc_def
   have hc : 0 < c := by
@@ -210,7 +213,7 @@ theorem Matrix.norm_toEuclideanCLM_le_of_gridNet {n : ℕ} (W : Matrix (Fin n) (
     ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) W‖ ≤ 2 * B := by
   set T := Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) W with hT
   -- `B ≥ 0`: the net contains `0`
-  have hB : 0 ≤ B := (abs_nonneg _).trans (h 0 (fo2Aux_zero_mem n) 0 (fo2Aux_zero_mem n))
+  have hB : 0 ≤ B := (abs_nonneg _).trans (h 0 (zero_mem_gridNet n) 0 (zero_mem_gridNet n))
   -- the bilinear form is the inner product `⟨x, W y⟩`
   have hbil : ∀ x y : Fin n → ℝ, ⟪(WithLp.toLp 2 x : EuclideanSpace ℝ (Fin n)),
       T (WithLp.toLp 2 y)⟫ = ∑ u, ∑ v, x u * W u v * y v := by
@@ -230,7 +233,7 @@ theorem Matrix.norm_toEuclideanCLM_le_of_gridNet {n : ℕ} (W : Matrix (Fin n) (
     have ha2 : ∑ i, a i ^ 2 ≤ 1 := by
       rw [← EuclideanSpace.real_norm_sq_eq]
       nlinarith [norm_nonneg a]
-    obtain ⟨x, hx, hd⟩ := fo2Aux_exists_near (fun i => a i) ha2
+    obtain ⟨x, hx, hd⟩ := exists_mem_gridNet_sum_sq_sub_le (fun i => a i) ha2
     refine ⟨x, hx, le_of_pow_le_pow_left₀ two_ne_zero (by norm_num) ?_⟩
     rw [EuclideanSpace.real_norm_sq_eq]
     norm_num
