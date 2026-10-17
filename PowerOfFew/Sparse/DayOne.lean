@@ -17,7 +17,7 @@ Lemma A.3 gives `2 C_BE (1 − 2σ²) / (σ √(n − 2))`. With that bound, the
 indicators is at most `4 C_BE² (1 − 2σ²)² / (n − 2)`, and
 `Var|B₁| ≤ n (1/4 + 4 C_BE² (1 − 2σ²)² (n − 1)/(n − 2))` instead of `7n/12`; the two agree in
 form at `p = 1/2`. (Lemma A.3 also requires a positive integer `d < (n₁ + n₂)/2`, while Proposition
-2.2 applies it with `d ∈ {0, −1}`; it holds for every integer `d`.) `varConst n p` is this coefficient, and Lemma 2.1's constant
+2.2 applies it at `d ≤ 0`; it holds for every integer `d`.) `varConst n p` is this coefficient, and Lemma 2.1's constant
 `C(c, D) = 7 / (12 (D_c − D)²)` becomes `varConst n p / (D_c − D)²`.
 
 Proofs. Proposition 2.2 follows the paper's two steps. Step 1: `P(v ∈ B₁) ≤ P(δ₀(v) ≤ 0)`, where
@@ -462,7 +462,8 @@ which needs `D_c ≥ 0`; it also sets `y = 2 − 1/c > 0` and replaces the Berry
 `D_c > 0` gives `0.56/c < Φ₀(2 − 1/c) < 1/2`, so `c > 1.12`, hence both.
 
 Departure from the paper (a cited lemma applied outside its hypotheses): the covariance step
-applies Lemma A.3 with `d ∈ {0, −1}`, while Lemma A.3 assumes `0 < d < (n₁ + n₂)/2`. The proof
+applies Lemma A.3 at points `d ≤ 0` (it prints `d ∈ {0, −1}`; the formal proof needs
+`d ∈ {−1, 0, 1}`), while Lemma A.3 assumes `0 < d < (n₁ + n₂)/2`. The proof
 uses the form of Lemma A.3 for every integer `d` (`sparseAux_pointProb_le`, from which `lemmaA_3`
 follows; it is the dense paper's Lemma 2.4), which Lemma A.3's proof gives. -/
 theorem proposition2_2 (hBE : ShevtsovaBerryEsseen) {n : ℕ} {p Δ c : ℝ} (hp0 : 0 < p)

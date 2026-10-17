@@ -641,7 +641,14 @@ theorem sparseAux_choose_mul_le {n : ℕ} (hn : 0 < n) {x y : ℝ} (hy : 0 < y) 
 vertices are Blue the next day, except with probability at most `b₂⁻¹ exp(−n F(pn, b₂, b₁))`.
 
 Deviation: the printed hypothesis is `0 ≤ b₂ ≤ b₁ ≤ 1/2 − 7/n` with no condition on `n`; see the
-module docstring. `b₂ > 0` because the bound divides by `b₂`. -/
+module docstring. `b₂ > 0` because the bound divides by `b₂`.
+
+Departure from the paper (gaps filled): the proof assumes `x ≥ 1/n` (a nonempty Blue set) without
+comment; the formal proof treats `⌊b₁ n⌋ = 0` separately (no Blue vertex, nothing to show). The
+step from the bound with `e^{−pn|S| g_x(t_x)}` to `|S| ≥ yn` needs
+`1 − x/2 − (3/2) x^(1/3) (1 − x)^(2/3) ≥ 0`, which the paper does not justify; it follows from the
+inequality `(1 − 2x)²/3 ≤ 1 − x/2 − (3/2) x^(1/3) (1 − x)^(2/3)` of Lemma 2.4's proof
+(`Real.one_sub_two_mul_sq_div_three_le`). -/
 theorem lemma2_3 {n : ℕ} (hn : 163 ≤ n) {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1) {b₁ b₂ : ℝ}
     (hb₂ : 0 < b₂) (hb : b₂ ≤ b₁) (hb₁ : b₁ ≤ 1 / 2 - 2 / Real.sqrt n) :
     1 - b₂⁻¹ * Real.exp (-(n * F (p * n) b₂ b₁)) ≤ gnpProb n p (fun G => ∀ B : Set (Fin n),

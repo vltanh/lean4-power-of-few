@@ -11,7 +11,7 @@ public import Basic.Combinatorics.Choose
 
 Counterexample (unconditional; it uses none of the assumed cited results): `p = 1` (the complete
 graph), `p_ac = 1/2`, `p_up = 1`, and `|B₀| = n/2 − Δ` with `Δ = ⌊n^(1/4)⌋`. The difference between
-the active Red and Blue vertices on day 1 is `Δ ± Θ(√n)`, so it is at most `−2` with probability
+the active Red and Blue vertices on day 1 is `Δ ± Θ(√n)`, so it is at most `−1` with probability
 tending to `1/2`; then every active vertex turns Blue, and afterwards Blue has a linear majority
 among the active vertices of every day except with probability `e^(−Ω(n))`, so Blue only grows.
 Red wins with probability at most `1/2 + o(1)`, whereas the printed theorems claim `1 − o(1)`.

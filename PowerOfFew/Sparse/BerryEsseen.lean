@@ -15,7 +15,8 @@ Berry–Esseen inequality needs it, and the paper applies the corollary to indep
 
 Proofs. Corollary A.2 is the Berry–Esseen inequality for the centred sum
 `∑ sᵢ Yᵢ − E ∑ sᵢ Yᵢ = ∑ sᵢ (Yᵢ − p)` (`PowerOfFew.berryEsseen_signedBernoulli`). Lemma A.3 is
-proved as the dense paper's Lemma 2.4, whose argument the sparse paper refers to:
+proved by the argument of the dense paper's Lemma 2.4 (the sparse paper derives it from Corollary A.2
+without details: "This implies the following lemma"):
 `P(X = d) ≤ P(X ≤ d) − P(X ≤ d − ε)`, both terms by Corollary A.2, and `ε → 0`. The argument
 holds for every real `d` and needs only `n₁ + n₂ ≥ 1`; that general form is
 `sparseAux_pointProb_le`, which the proof of Proposition 2.2 uses (with `d ∈ {−1, 0, 1}`).
