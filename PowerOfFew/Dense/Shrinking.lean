@@ -246,7 +246,7 @@ private theorem shrinkAux_sum_ind_mul_J {n : ℕ} (B S : Finset (Fin n)) :
   simp only [mul_left_comm _ (2 : ℝ), ← Finset.mul_sum, shrinkAux_ind_mul_ind, shrinkAux_sum_ind]
 
 /-- The coefficient `X_{uv} = J(u) 1_S(v) + J(v) 1_S(u)` of the edge variable `W_{uv}` in
-`δ(S)` (the paper's equation (3.2)). -/
+`δ(S)` (the paper's equation (3.1)). -/
 private def shrinkAux_X {n : ℕ} (B S : Finset (Fin n)) : Sym2 (Fin n) → ℝ :=
   Sym2.lift ⟨fun u v => shrinkAux_J B u * shrinkAux_ind S v + shrinkAux_J B v * shrinkAux_ind S u,
     fun _ _ => add_comm _ _⟩
@@ -269,7 +269,7 @@ private theorem shrinkAux_delta_nonpos {n : ℕ} {G : SimpleGraph (Fin n)} {B S 
   · rw [h1]
     simp
 
-/-- The paper's equation (3.2): `δ(S) = ∑_{u ≠ v} [J(u) 1_S(v) + J(v) 1_S(u)] W_{uv}`, a sum
+/-- The paper's equation (3.1): `δ(S) = ∑_{u ≠ v} [J(u) 1_S(v) + J(v) 1_S(u)] W_{uv}`, a sum
 over the unordered pairs `{u, v}`. -/
 private theorem shrinkAux_delta_eq {n : ℕ} (ω : EdgeVars n) (B S : Finset (Fin n)) :
     shrinkAux_delta (graphOfEdges ω) B S =
@@ -369,7 +369,7 @@ private theorem shrinkAux_neg_div_le {t t₀ D D₀ : ℝ} (ht₀ : 0 ≤ t₀) 
 
 /-- The core of the proof of Lemma 3.4: for a Blue set `B` of `n₀` vertices and a set `S` of
 `m ≥ 1` vertices, `P(S ⊆ B₁) ≤ P(δ(S) ≤ 0) ≤ exp(−2p²(n − 2n₀ − 1)² m / (n + m − 2))`, by
-Hoeffding's inequality applied to the decomposition (3.2) of `δ(S)` into independent summands
+Hoeffding's inequality applied to the decomposition (3.1) of `δ(S)` into independent summands
 `X_{uv} W_{uv}`, each with range `|X_{uv}|`. -/
 private theorem shrinkAux_prob_subset_le {n n₀ m : ℕ} (hn₀ : (n₀ : ℝ) < n / 2) {p : ℝ}
     (hp0 : 0 < p) (hp1 : p < 1) {B S : Finset (Fin n)} (hB : B.card = n₀) (hS : S.card = m)
@@ -550,8 +550,10 @@ Reading: the lemma prints the bound as `1 − n⁻¹ exp(−0.025 n) = 1 − P�
 `denseP2`. The printed `0.025 n` bound follows for `n ≥ 1288` (`lemma3_5_printed`).
 
 In the proof, the paper's display bounding the exponent drops the square on `(1.6 √n / p − 1)`
-(a typo; the next line expands the square). When `n/2 − (0.8/p) √n < 0`, a case the paper leaves
-implicit, no Blue set qualifies and the event is sure. -/
+(a typo; the next line expands the square).
+
+Departure from the paper (a case the paper leaves implicit): when `n/2 − (0.8/p) √n < 0`, no Blue
+set qualifies and the event is sure. -/
 theorem lemma3_5 {n : ℕ} (hn : 1 ≤ n) {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1) :
     1 - denseP2 n ≤ gnpProb n p (fun G => ∀ B : Set (Fin n),
       (B.ncard : ℝ) ≤ n / 2 - 0.8 / p * Real.sqrt n → ((majorityStep G B).ncard : ℝ) ≤ 0.4 * n) := by

@@ -478,7 +478,9 @@ Departure from the paper (an error and a gap repaired; E-item D-Thm1.3). Write `
 bound is trivial for `K ≥ (2L/φ)²`. Its `P₁ ≤ 2/(min{cₙ, √n} φ/2)²` equals
 `8 φ⁻² max{n⁻¹, cₙ⁻²}` (the paper prints `4 φ⁻²`), and its `P₂, P₃, P₄ = o(n⁻²)` is used in the
 uniform form `P₂ + P₃ + P₄ ≤ K'(p) n⁻² ≤ K'(p) n⁻¹`. Hence the proof takes
-`K = 8 φ⁻² + K'(p) + (2L/φ)²` in place of the paper's `4 φ⁻² + 1`. -/
+`K = 8 φ⁻² + K'(p) + (2L/φ)²` in place of the paper's `4 φ⁻² + 1`. The paper's `+ 1` absorbs
+`P₂ + P₃ + P₄` only once `n` is large in terms of `p`, even inside its main case: for `p = 0.1`,
+`n = 10⁴`, `cₙ = 100` (`min{√n, cₙ} φ ≈ 23.6 ≥ 2L ≈ 19.3`), `P₃ = n⁻¹ e^13991`. -/
 theorem theorem1_3 (hBE : ShevtsovaBerryEsseen) {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1) :
     ∃ K : ℝ, ∀ (n c : ℕ), 0 < c → ∀ B₀ : Set (Fin n), (B₀.ncard : ℝ) ≤ n / 2 - c →
       1 - K * max ((n : ℝ)⁻¹) (((c : ℝ) ^ 2)⁻¹) ≤ gnpProb n p (fun G => blueAfter G B₀ 4 = ∅) := by

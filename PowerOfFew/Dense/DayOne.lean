@@ -308,7 +308,12 @@ theorem dayOneAux_prob_red_ge (hBE : ShevtsovaBerryEsseen) {c : ℕ} (hp0 : 0 < 
 `F₁(n, p, c) = √n Φ₀((2pc + min{p, 1 − p}) / (σ √n)) − 0.6 (1 − 2σ²) / σ`.
 
 Reading: the paper also writes `F₁ = F(n, p, c) + 0.8 √n / p`; by the definitions,
-`F₁ = F(n, p, c) + 0.8 / p`, which is what its Chebyshev step uses. -/
+`F₁ = F(n, p, c) + 0.8 / p`, which is what its Chebyshev step uses.
+
+Departure from the paper (a gap filled): the proof writes `|R₀| − |B₀| = 2c`, while the hypothesis
+gives only `|R₀| − |B₀| ≥ 2c` (and Lemma 2.1 uses the claim with `|B₀| = ⌊n/2 − c⌋`, so the
+difference is `2c + 1` for odd `n`); the formal proof uses `≥ 2c` and that `Φ₀` is increasing
+(`dayOneAux_prob_red_ge`). -/
 theorem claim2_5 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1)
     (hF : 0 < denseF n p c) {B₀ : Set (Fin n)} (hB₀ : (B₀.ncard : ℝ) ≤ n / 2 - c) :
     (n : ℝ) / 2 + (Real.sqrt n * Φ₀ ((2 * p * c + min p (1 - p)) / Real.sqrt (p * (1 - p) * n)) -
