@@ -736,8 +736,6 @@ theorem dayOneAux_pair_count {c b : ℕ} (hb : b = ⌊(n : ℝ) / 2 - c⌋₊) :
         (by linarith : (0 : ℝ) ≤ (n - 2 * b) + 2 * c)]
   nlinarith
 
--- The hypothesis `hc : 0 < c` of the statement is not needed by the proof.
-set_option linter.unusedVariables false in
 /-- **Claim 2.6** (`D:claim:day-1-covariance`).
 `Var|R₁| ≤ 0.25 n + 0.7 (1 − 2σ²)² (n + 4c² / n)`.
 
@@ -745,9 +743,10 @@ Deviation (hypotheses the paper's computation uses, as for the sparse paper's Le
 paper counts the pairs of vertices of the same initial colour as if `|R₀| = n/2 + c` and
 `|B₀| = n/2 − c`, and bounds `1.2544/(n − 2) ≤ 1.4/n`, which needs `n ≥ 20`. The statement assumes
 `|B₀| = ⌊n/2 − c⌋` (which also covers odd `n`) and `n ≥ 20`. Lemma 2.1, for every
-`|B₀| ≤ n/2 − c`, reduces to this case by the monotonicity of majority dynamics. -/
+`|B₀| ≤ n/2 − c`, reduces to this case by the monotonicity of majority dynamics. The hypothesis
+`c > 0` of Lemma 2.1 is not needed here and is omitted. -/
 theorem claim2_6 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1)
-    (hn : 20 ≤ n) (hc : 0 < c) {B₀ : Set (Fin n)} (hB₀ : B₀.ncard = ⌊(n : ℝ) / 2 - c⌋₊) :
+    (hn : 20 ≤ n) {B₀ : Set (Fin n)} (hB₀ : B₀.ncard = ⌊(n : ℝ) / 2 - c⌋₊) :
     gnpVar n p (fun G => ((blueAfter G B₀ 1)ᶜ.ncard : ℝ)) ≤
       0.25 * n + 0.7 * (1 - 2 * p + 2 * p ^ 2) ^ 2 * (n + 4 * (c : ℝ) ^ 2 / n) := by
   classical
@@ -942,7 +941,7 @@ theorem lemma2_1 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0 : 0 < p
   have hgap0 : 0 < denseF n p c * Real.sqrt n := mul_pos hF hsn
   have htE : t < μG[X] := by linarith
   -- Claim 2.6
-  have hV := claim2_6 hBE hp0 hp1 hn (by omega) hcard
+  have hV := claim2_6 hBE hp0 hp1 hn hcard
   have hVX : gnpVar n p (fun G => ((blueAfter G B₀' 1)ᶜ.ncard : ℝ)) = variance X μG := rfl
   rw [hVX] at hV
   -- the event `|B₁| > n/2 − 0.8 √n / p` is `|R₁| < n/2 + 0.8 √n / p`

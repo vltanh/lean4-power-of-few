@@ -37,9 +37,12 @@ namespace PowerOfFew.Dense
 4. with probability at least `1 − P₄(n, p)`, every Blue set of at most `p(n − 1)/3` vertices
    vanishes the next day;
 
-and consequently `R₄ = V(G)` with probability at least `1 − (P₁ + P₂ + P₃ + P₄)`. -/
+and consequently `R₄ = V(G)` with probability at least `1 − (P₁ + P₂ + P₃ + P₄)`.
+
+The paper's hypothesis `c > 0` is omitted: it follows from `F(n, p, c) > 0`, since
+`F(n, p, 0) < 0`, and the proof does not use it. -/
 theorem theorem1_6 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1)
-    (hn : 0 < n) (hc : 0 < c) (hF : 0 < denseF n p c) {B₀ : Set (Fin n)}
+    (hn : 0 < n) (hF : 0 < denseF n p c) {B₀ : Set (Fin n)}
     (hB₀ : (B₀.ncard : ℝ) ≤ n / 2 - c) :
     1 - denseP1 n p c ≤
         gnpProb n p (fun G => ((blueAfter G B₀ 1).ncard : ℝ) ≤ n / 2 - 0.8 * Real.sqrt n / p) ∧
@@ -290,7 +293,7 @@ theorem theorem1_2 (hBE : ShevtsovaBerryEsseen) {n : ℕ} (hn : 1000 ≤ n) {B�
   -- Theorem 1.6 with `p = 1/2` and `c = 5`; condition (1.1) holds since `F ≥ 2.0997 > 0`.
   have hF := denseMainAux_denseF_half_five_ge hn
   have h16 := (theorem1_6 hBE (p := 1 / 2) (c := 5) (by norm_num) (by norm_num) (by omega)
-    (by norm_num) (by linarith) (B₀ := B₀) (by push_cast; linarith)).2.2.2.2
+    (by linarith) (B₀ := B₀) (by push_cast; linarith)).2.2.2.2
   -- `P₁ ≤ 0.0965` and `max{P₂, P₃, P₄} < 10⁻¹⁰`, so `P₁ + P₂ + P₃ + P₄ < 0.1`.
   have h1 := denseMainAux_P1_half_five_le hn
   have h2 := denseMainAux_P2_lt hn
@@ -529,7 +532,7 @@ theorem theorem1_3 (hBE : ShevtsovaBerryEsseen) {p : ℝ} (hp0 : 0 < p) (hp1 : p
       rw [hFeq]
       linarith
     have hFpos : 0 < denseF n p c := lt_of_lt_of_le (by positivity) hF
-    have h16 := (theorem1_6 hBE hp0 hp1 hn0 hc hFpos hB₀).2.2.2.2
+    have h16 := (theorem1_6 hBE hp0 hp1 hn0 hFpos hB₀).2.2.2.2
     -- `P₁ ≤ 2 / (m φ/2)² = 8 φ⁻² m⁻² ≤ 8 φ⁻² max{1/n, 1/cₙ²}`.
     have hP1 : denseP1 n p c ≤ 8 * φ⁻¹ ^ 2 * (m ^ 2)⁻¹ := by
       have hnum := denseMainAux_P1_num_le hp0 hp1 hnR (by linarith : (0 : ℝ) ≤ c) hcn

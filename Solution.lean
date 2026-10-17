@@ -65,7 +65,7 @@ theorem dense_theorem1_6 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0
         (B.ncard : ℝ) ≤ p * ((n : ℝ) - 1) / 3 → majorityStep G B = ∅) ∧
       1 - (denseP1 n p c + denseP2 n + denseP3 n p + denseP4 n p) ≤
         gnpProb n p (fun G => blueAfter G B₀ 4 = ∅) :=
-  PowerOfFew.Dense.theorem1_6 hBE hp0 hp1 hn hc hF hB₀
+  PowerOfFew.Dense.theorem1_6 hBE hp0 hp1 hn hF hB₀
 
 /-- Dense paper, **Theorem 1.2** (the power of few). -/
 theorem dense_theorem1_2 (hBE : ShevtsovaBerryEsseen) {n : ℕ} (hn : 1000 ≤ n)

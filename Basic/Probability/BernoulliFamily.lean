@@ -44,6 +44,7 @@ theorem gnpAux_integrable (hX : IsBernoulliFamily μ p X) (i : ι) : Integrable 
     (Filter.Eventually.of_forall fun ω => ?_)
   rcases hX.zero_or_one i ω with h | h <;> simp [h]
 
+omit [IsProbabilityMeasure μ] in
 /-- The mean of each variable is `p`. -/
 theorem integral_eq (hX : IsBernoulliFamily μ p X) (i : ι) : ∫ ω, X i ω ∂μ = p := by
   have h : (fun ω => X i ω) = Set.indicator {ω | X i ω = 1} 1 := by
@@ -81,8 +82,7 @@ theorem integral_abs_pow_three_sub (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ 
   ring
 
 /-- The sum over a finite set `S` has the binomial law `Bin(#S, p)`. -/
-theorem measureReal_sum_eq (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
-    (S : Finset ι) (k : ℕ) :
+theorem measureReal_sum_eq (hX : IsBernoulliFamily μ p X) (S : Finset ι) (k : ℕ) :
     μ.real {ω | ∑ i ∈ S, X i ω = k} = (S.card.choose k : ℝ) * p ^ k * (1 - p) ^ (S.card - k) := by
   classical
   induction S using Finset.induction_on generalizing k with
@@ -182,6 +182,7 @@ theorem measureReal_sum_eq (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p) (hp1 
         push_cast
         ring
 
+omit [IsProbabilityMeasure μ] in
 /-- Restricting a Bernoulli family along an injective map gives a Bernoulli family. -/
 theorem comp {κ : Type*} (hX : IsBernoulliFamily μ p X) {f : κ → ι}
     (hf : Function.Injective f) : IsBernoulliFamily μ p (fun k => X (f k)) := by

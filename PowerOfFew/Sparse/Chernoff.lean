@@ -33,9 +33,6 @@ private theorem appAux_isBernoulliFamily_one_sub {Ω ι : Type*} [MeasurableSpac
     have hms : MeasurableSet {ω | ξ i ω = 1} := hξ.measurable i (measurableSet_singleton 1)
     rw [hset, probReal_compl_eq_one_sub hms, hξ.prob_one i]
 
--- The coupling of the proof is pointwise: neither the measurability of `Y` (`hYm`) nor its
--- independence from `ξ` (`hindep`) is needed.
-set_option linter.unusedVariables false in
 /-- **Lemma A.6** (`S:lem:gen-chernoff`). Let `p ∈ (0, 1)` and `m > 0`. If `Y` takes values in
 `[0, m] ∩ ℤ` and `X ∼ Bin(Y, p)`, then for every `t > 0`,
 `P(X ≥ pm + t) ≤ exp(−max{t² / (2(pm + t)), t² / (2(1 − p)m)})`.
@@ -45,11 +42,12 @@ obtained from the lower-tail bound (30) for `Z' = m − Z ∼ Bin(m, 1 − p)`, 
 `Z = X + X₁ ≥ X` with `X₁ = ∑_{Y ≤ i < m} ξᵢ`. Reading: the paper's `Bin(m, p)` needs `m ∈ ℕ`;
 here `Z = ∑_{i < ⌊m⌋} ξᵢ` (since `Y ≤ m` is an integer, `Y ≤ ⌊m⌋`), and the bounds for
 `Bin(⌊m⌋, p)` imply those for `m` since `p⌊m⌋ ≤ pm` and `(1 − p)⌊m⌋ ≤ (1 − p)m`. The coupling is
-pointwise, so the independence of `Y` and `ξ` is not needed. -/
+pointwise, so the paper's hypothesis that `Y` is independent of the `ξᵢ` is not needed, nor is
+the measurability of `Y`; both are omitted. -/
 theorem lemmaA_6 {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
-    {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1) {m : ℝ} (hm : 0 < m) {Y : Ω → ℕ} (hYm : Measurable Y)
+    {p : ℝ} (hp0 : 0 < p) (hp1 : p < 1) {m : ℝ} (hm : 0 < m) {Y : Ω → ℕ}
     (hY : ∀ ω, (Y ω : ℝ) ≤ m) {ξ : ℕ → Ω → ℝ} (hξ : IsBernoulliFamily μ p ξ)
-    (hindep : IndepFun Y (fun ω i => ξ i ω) μ) {t : ℝ} (ht : 0 < t) :
+    {t : ℝ} (ht : 0 < t) :
     μ.real {ω | p * m + t ≤ ∑ i ∈ Finset.range (Y ω), ξ i ω} ≤
       Real.exp (-max (t ^ 2 / (2 * (p * m + t))) (t ^ 2 / (2 * (1 - p) * m))) := by
   classical

@@ -37,10 +37,10 @@ is): `Δ = n/2 − |B₀| ≥ c/p ≥ c` forces `n ≥ 2c`. If `pn ≤ n − 10`
 applies (`pΔ ≥ c ≥ 10`, `pΔ² ≥ cΔ ≥ c² ≥ 2c`), with failure probability at most
 `C (1/(2c) + (2c)^(−λ/2)) ≤ ε` for `c` large. If `pn > n − 10`, Theorem 1.2 does not apply, and Red,
 ahead by `2Δ ≥ 2c` vertices, wins within two days with probability at least
-`1 − 40/(2c − 1) − 2048/n ≥ 1 − 1064/c` (`colorAux_nearComplete`). The hypothesis `ε ≤ 1` is not
-needed. -/
+`1 − 40/(2c − 1) − 2048/n ≥ 1 − 1064/c` (`colorAux_nearComplete`). The paper's `ε ≤ 1` is not
+needed and is omitted. -/
 theorem theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
-    {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε ≤ 1) {lam : ℝ} (hlam : 0 < lam) :
+    {ε : ℝ} (hε0 : 0 < ε) {lam : ℝ} (hlam : 0 < lam) :
     ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 → (1 + lam) * Real.log n / n ≤ p →
       ∀ B₀ : Set (Fin n), (B₀.ncard : ℝ) ≤ n / 2 - c / p →
         1 - ε ≤ gnpProb n p (fun G => ∃ t, blueAfter G B₀ t = ∅) := by
@@ -158,7 +158,7 @@ theorem appendixA (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BL
         ((B₀.ncard : ℝ) < n / 2 ∧ ∃ t, blueAfter G B₀ t = ∅) ∨
           ((n : ℝ) / 2 < B₀.ncard ∧ ∃ t, blueAfter G B₀ t = Set.univ)) := by
   -- Theorem 1.5 with `ε/2` (and `λ = 1`: `p ≥ λ n^(−1/2)` gives `p ≥ 2 log n / n`)
-  obtain ⟨c, hc, h15⟩ := theorem1_5 hBE hBBK hBLM (ε := ε / 2) (by linarith) (by linarith)
+  obtain ⟨c, hc, h15⟩ := theorem1_5 hBE hBBK hBLM (ε := ε / 2) (by linarith)
     (lam := 1) one_pos
   -- the paper's constant `c' ≤ ε/6`
   set c' : ℝ := ε / 6 with hc'

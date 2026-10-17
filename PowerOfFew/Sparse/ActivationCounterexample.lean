@@ -283,7 +283,7 @@ private lemma lazyCexAux_measureReal_ge_eq_sum {Ω ι : Type*} [MeasurableSpace 
       rw [hj]
       exact_mod_cast hkj
   rw [hset, measureReal_biUnion_finset]
-  · exact Finset.sum_congr rfl fun j _ => hX.measureReal_sum_eq hp0 hp1 s j
+  · exact Finset.sum_congr rfl fun j _ => hX.measureReal_sum_eq s j
   · intro j _ j' _ hjj'
     rw [Function.onFun, Set.disjoint_left]
     intro ω h h'

@@ -155,7 +155,7 @@ private lemma lazyShrinkAux_measureReal_le_sum {Ω ι : Type*} [MeasurableSpace 
   have hmeas : ∀ k : ℕ, MeasurableSet {ω | ∑ i ∈ s, X i ω = k} := fun k =>
     (Finset.measurable_sum s fun i _ => hX.measurable i) (measurableSet_singleton _)
   rw [hset, measureReal_biUnion_finset]
-  · exact Finset.sum_congr rfl fun k _ => hX.measureReal_sum_eq hq0 hq1 s k
+  · exact Finset.sum_congr rfl fun k _ => hX.measureReal_sum_eq s k
   · intro k _ k' _ hkk'
     refine Set.disjoint_left.2 fun ω hω hω' => hkk' ?_
     simp only [Set.mem_ofPred_eq] at hω hω'
@@ -176,8 +176,7 @@ private lemma lazyShrinkAux_upper_tail {Ω ι : Type*} [MeasurableSpace Ω] {μ 
   rcases hq1.lt_or_eq with hq1 | rfl
   · set μ' := Measure.infinitePi fun _ : ℕ => bernoulliMeasure true false (toUnit q)
     have hξ := lazyShrinkAux_isBernoulliFamily_infinitePi hq0.le hq1.le
-    have key := lemmaA_6 (μ := μ') hq0 hq1 hm (Y := fun _ => s.card) measurable_const
-      (fun _ => hsm) hξ (indepFun_const_left _ _) ht
+    have key := lemmaA_6 (μ := μ') hq0 hq1 hm (Y := fun _ => s.card) (fun _ => hsm) hξ ht
     rw [lazyShrinkAux_measureReal_le_sum hq0.le hq1.le hX,
       ← Finset.card_range s.card, ← lazyShrinkAux_measureReal_le_sum hq0.le hq1.le hξ]
     exact key

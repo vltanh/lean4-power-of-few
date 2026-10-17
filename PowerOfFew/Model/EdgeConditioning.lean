@@ -98,10 +98,9 @@ theorem edgesAt_inter_edgesAt {v w : Fin n} (hvw : v ≠ w) :
   · rintro rfl
     exact ⟨⟨w, Ne.symm hvw, rfl⟩, ⟨v, hvw, Sym2.eq_swap⟩⟩
 
-/-- Bounded functions of disjoint sets of edge variables are independent. -/
+/-- Functions of disjoint sets of edge variables are independent. -/
 theorem integral_mul_of_dependsOn_disjoint {f g : EdgeVars n → ℝ} {s t : Set (Sym2 (Fin n))}
-    (hf : DependsOn f s) (hg : DependsOn g t) (hst : Disjoint s t) {C : ℝ}
-    (hfC : ∀ ω, |f ω| ≤ C) (hgC : ∀ ω, |g ω| ≤ C) :
+    (hf : DependsOn f s) (hg : DependsOn g t) (hst : Disjoint s t) :
     ∫ ω, f ω * g ω ∂(edgeLaw n p) = (∫ ω, f ω ∂(edgeLaw n p)) * ∫ ω, g ω ∂(edgeLaw n p) := by
   -- The coordinates of the product measure are independent.
   have hcoord : iIndepFun (fun (e : Sym2 (Fin n)) (ω : EdgeVars n) => ω e) (edgeLaw n p) :=
@@ -175,8 +174,8 @@ theorem integral_eq_edgeCondExp (hp0 : 0 ≤ p) (hp1 : p ≤ 1) {e : Sym2 (Fin n
           ∫ ω, (1 - edgeInd e ω) * f (Function.update ω e False) ∂(edgeLaw n p) :=
         integral_add Integrable.of_finite Integrable.of_finite
     _ = p * edgeCondExp n p e True f + (1 - p) * edgeCondExp n p e False f := by
-        rw [integral_mul_of_dependsOn_disjoint hind (hupd True) hdisj hbd (hbdf True),
-          integral_mul_of_dependsOn_disjoint hind' (hupd False) hdisj hbd' (hbdf False), hp, hp']
+        rw [integral_mul_of_dependsOn_disjoint hind (hupd True) hdisj,
+          integral_mul_of_dependsOn_disjoint hind' (hupd False) hdisj, hp, hp']
         rfl
 
 /-- **The covariance of two functions sharing one edge.** If `f` depends only on the edges in
@@ -207,7 +206,6 @@ theorem covariance_shared_edge (hp0 : 0 ≤ p) (hp1 : p ≤ 1) {e : Sym2 (Fin n)
   have hprod : ∀ b : Prop, edgeCondExp n p e b (fun ω => f ω * g ω) =
       edgeCondExp n p e b f * edgeCondExp n p e b g := fun b =>
     integral_mul_of_dependsOn_disjoint (hfix b f s hes hf) (hfix b g t het hg) hst
-      (fun _ => hfC _) (fun _ => hgC _)
   rw [integral_eq_edgeCondExp hp0 hp1 he hfgC, integral_eq_edgeCondExp hp0 hp1 he hfC,
     integral_eq_edgeCondExp hp0 hp1 he hgC, hprod True, hprod False]
   ring

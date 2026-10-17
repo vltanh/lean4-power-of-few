@@ -453,7 +453,7 @@ Lemma 3.2). -/
 private theorem colorAux_law_half_point {n k : ℕ} (hn : 1 ≤ n) (hk : k ≤ n) :
     (colorAux_law n (1 / 2)).real {χ | ∑ v, colorAux_red v χ = k} < 1 / Real.sqrt n := by
   have hX := colorAux_isBernoulliFamily (n := n) (q := 1 / 2) (by norm_num) (by norm_num)
-  have h := hX.measureReal_sum_eq (by norm_num) (by norm_num) Finset.univ k
+  have h := hX.measureReal_sum_eq Finset.univ k
   rw [Finset.card_univ, Fintype.card_fin] at h
   rw [h]
   have e : (1 / 2 : ℝ) ^ k * (1 - 1 / 2) ^ (n - k) = (1 / 2) ^ n := by
