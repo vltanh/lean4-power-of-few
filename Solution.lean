@@ -25,6 +25,7 @@ public import PowerOfFew.Sparse.ActivationLastDays
 public import PowerOfFew.Sparse.ActivationShrinking
 public import PowerOfFew.Sparse.BerryEsseen
 public import PowerOfFew.Sparse.Chernoff
+public import PowerOfFew.Sparse.ColoringAux
 public import PowerOfFew.Sparse.DayOne
 public import PowerOfFew.Sparse.DayThree
 public import PowerOfFew.Sparse.DayTwo

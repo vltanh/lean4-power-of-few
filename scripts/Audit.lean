@@ -30,6 +30,7 @@ import all PowerOfFew.Sparse.ActivationLastDays
 import all PowerOfFew.Sparse.ActivationShrinking
 import all PowerOfFew.Sparse.BerryEsseen
 import all PowerOfFew.Sparse.Chernoff
+import all PowerOfFew.Sparse.ColoringAux
 import all PowerOfFew.Sparse.DayOne
 import all PowerOfFew.Sparse.DayThree
 import all PowerOfFew.Sparse.DayTwo
