@@ -26,6 +26,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -47,6 +48,15 @@ ROOT = Path(__file__).resolve().parent.parent
 BUILD = ROOT / '.lake' / 'build' / 'lib' / 'lean'
 MATHLIB = ROOT / '.lake' / 'packages' / 'mathlib'
 DOCS_URL = 'https://leanprover-community.github.io/mathlib4_docs/'
+
+
+def git_ignored(path):
+    """Whether git ignores `path`: a private file, such as `NEXT.md`, is never linked, since the
+    link would be broken in the published repository."""
+    try:
+        return subprocess.run(['git', 'check-ignore', '-q', path], cwd=ROOT).returncode == 0
+    except OSError:
+        return False
 
 # Lean's standard axioms, and the core modules that declare them.
 CORE = {'propext': 'Init.Core', 'Classical.choice': 'Init.Prelude', 'Quot.sound': 'Init.Prelude'}
@@ -120,7 +130,7 @@ class Linker:
         if path and not path.startswith(('/', '.')) and ' ' not in path:
             for base in [''] + PATH_BASES.get(doc_dir, []):
                 candidate = os.path.normpath(os.path.join(base, path))
-                if (ROOT / candidate).exists():
+                if (ROOT / candidate).exists() and not git_ignored(candidate):
                     return candidate
         if not IDENT.match(text):
             return None

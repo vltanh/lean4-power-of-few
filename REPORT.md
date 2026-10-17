@@ -52,7 +52,8 @@ Status of the formalization:
 - **Errors.** Three statements of the sparse paper are false: Theorem 1.5 needs a bias
   ω(n^(−1/2)), not only ω((pn)⁻¹) (E13); Theorems 1.7 and 4.1 need an initial gap
   Δ ≳ √(n/p_ac) for the first day, which their proof assumes and their statements omit, so the power
-  of few is not robust under random activations, contrary to the abstract (E14). In
+  of few is not robust under random activations, contrary to the abstract (E14; B. Tran's 2025
+  thesis restates both theorems unchanged). In
   the dense paper, the proof of Theorem 1.2 computes P₁ ≤ 0.0902 where the true value at n = 1000 is
   0.0962 (the theorem holds: the total failure probability stays below 0.1, E4), the proof of
   Theorem 1.3 has the factor 4 where its own chain gives 8 (E5), and Lemma 3.5 states a bound that its
@@ -237,8 +238,12 @@ between the active Red and Blue vertices is `Δ ± Θ(√n)`, so it is at most `
 tending to 1/2, and then every active vertex turns Blue and Blue keeps a linear majority; Red wins
 with probability at most `1/2 + o(1)` (simulation: .577, .546, .524 for `n = 10⁴, 10⁵, 10⁶`). Error.
 The paper's proof of Proposition 4.2 assumes `p_ac^(1/2) Δ ≥ S_ε n^(1/2)` (S:1358), which the
-theorems omit. The corrected statements keep that hypothesis with the failure probability `ε` of
-Proposition 4.2, and the hypothesis `(1 − p) p_ac n ≥ 10` that the proofs use (Section 6); they are
+theorems omit. In arXiv v1 the first-day bound had no such hypothesis: its variance step bounds the
+covariances given the active set and leaves out the variance of the conditional means, through
+which the colour balance of the active set enters. Version 2 added the hypothesis to Proposition
+4.2 but not to the theorems, and B. Tran's 2025 thesis repeats the theorems unchanged (Section 10).
+The corrected statements keep that hypothesis with the failure probability `ε` of Proposition 4.2,
+and the hypothesis `(1 − p) p_ac n ≥ 10` that the proofs use (Section 6); they are
 proved ([`theorem4_1`](PowerOfFew/Sparse/Activation.lean#L217), [`theorem1_7`](PowerOfFew/Sparse/Activation.lean#L334)). [`theorem1_7_printed_false`](PowerOfFew/Sparse/ActivationCounterexample.lean#L882), [`theorem4_1_printed_false`](PowerOfFew/Sparse/ActivationCounterexample.lean#L898) and their
 per-sequence forms prove the counterexample. The counterexample also contradicts the paper's claims
 that the power of few "is robust" (abstract, S:229) and "remains robust" (S:426) under random
@@ -554,13 +559,15 @@ reuses Lemma 2.3's computation rather than its statement; the sparse Proposition
 Searched on 2026-10-17: the arXiv API (titles and abstracts: "majority dynamics", "unanimity",
 "power of few", and the authors), Crossref (metadata, reference lists and its filter for
 corrections), the citation lists of OpenAlex and Semantic Scholar, zbMATH Open, DROPS/LIPIcs,
-theoryofcomputing.org, the authors' pages, GitHub, the Reservoir index, Mathlib, the Isabelle AFP and
-a general web search. Every summary below was checked against its source by a second reader, where
-the source could be opened: not the papers of Goles–Olivos and Poljak–Sůra, nor B. Tran's thesis.
+theoryofcomputing.org, the authors' pages, GitHub, the Reservoir index, Mathlib, the Isabelle AFP,
+Google Scholar (until it blocked scripted access), MathOverflow (through the Stack Exchange API), the
+Internet Archive and a general web search. Every summary below was checked against its source by a
+second reader, where the source could be opened: not the papers of Goles–Olivos and Poljak–Sůra.
 Claims that something does not exist were only corroborated. Wiley, ScienceDirect, SpringerLink,
 Project Euclid and the Yale thesis server refused scripted access, so a few published texts were read
-in their arXiv versions; this is said where it matters. Δ is the
-larger camp's excess over n/2. Preprints are reported as claims.
+in their arXiv versions, and B. Tran's thesis in a capture of the Internet Archive's Wayback Machine;
+this is said where it matters. Δ is the larger camp's excess over n/2. Preprints are reported as
+claims.
 
 ### Before the papers
 
@@ -643,15 +650,18 @@ larger camp's excess over n/2. Preprints are reported as claims.
   Conjecture 1.11 as open.
 - Y. Shang, *Results Math.* 76 (2021): unanimity for biased random colourings of inhomogeneous random
   graphs.
-- H. B. L. Tran's Yale PhD thesis (2025) lists the sparse theorem, the Kim–Tran theorem, robustness
-  when voters "do not reliably change sides" and the regime below connectivity. We could not open it;
-  it is the most likely place for revised versions of the sparse Theorems 1.5, 1.7 and 4.1.
+- **H. B. L. Tran's Yale PhD thesis** (2025; read in a Wayback Machine capture of the EliScholar
+  PDF): it presents the sparse theorem (its Theorem 1.12), the Kim–Tran theorem, robustness when
+  voters "do not reliably change sides" and the regime below connectivity. Its Theorems 1.17 and 6.1
+  restate the sparse Theorems 1.7 and 4.1 as in arXiv v2, misprint included, and its Proposition 6.2
+  keeps the hypothesis `p_ac^(1/2) Δ ≥ S_ε n^(1/2)`, so the error of E14 stands there too. It has
+  no counterpart of the sparse Theorem 1.5.
 - **Corrections.** We found no erratum, comment or paper that reports an error in either paper
-  (Crossref registers no update for the ToC, LIPIcs or RSA versions). No later paper discusses the
-  random-activation model of the sparse paper's Section 4, apart from the thesis abstract. The
-  three statements found false here (sparse Theorems 1.5, 1.7, 4.1) have not been flagged before; as
-  noted above, Zehmakan's remark of 2018 already contradicts Theorem 1.5 at p = 1, and Jaffe's
-  Theorem 3.2 repeats the error of Theorem 1.5.
+  (Crossref registers no update for the ToC, LIPIcs or RSA versions). No later work discusses the
+  random-activation model of the sparse paper's Section 4, apart from the thesis, which restates it
+  unchanged. The three statements found false here (sparse Theorems 1.5, 1.7, 4.1) have not been
+  flagged before; as noted above, Zehmakan's remark of 2018 already contradicts Theorem 1.5 at
+  p = 1, and Jaffe's Theorem 3.2 repeats the error of Theorem 1.5.
 
 ### Versions
 
@@ -661,11 +671,15 @@ larger camp's excess over n/2. Preprints are reported as claims.
   Theorem 1.6. The arXiv v2 claim does not follow from its own argument: at its parameters its bound
   for the third day exceeds 1 (it is about 10^325). The journal version's claim does (E4).
 - The sparse paper: arXiv v1 (2023-02-11), the published version (online 2024-09-14) and arXiv v2
-  (2024-11-23), the accepted manuscript after two rounds of review. Between v1 and v2, Theorem 4.1
-  gained its lower bound on `p p_up p_ac² Δ` (a referee noticed it was missing), and the spectral
-  bound of Lemma A.7 moved from a result of Bandeira and van Handel to Theorem 3.2 of
-  Benaych-Georges, Bordenave and Knowles; Theorems 1.2 and 1.5 are unchanged. No erratum of either
-  paper was found.
+  (2024-11-23), the accepted manuscript after two rounds of review. Between v1 and v2 the first-day
+  bound of Section 4 changed: v1 derives it from a lemma without the hypothesis
+  `p_ac^(1/2) Δ ≥ S_ε n^(1/2)`, whose proof leaves out the fluctuation of the active set (E14), and
+  v2 states Proposition 4.2 with that hypothesis (the old statement remains in v2's source as a
+  comment). Theorems 1.7 and 4.1 did not gain it: Theorem 1.7 is the same in both versions up to
+  notation, and Theorem 4.1 only changed its condition `p_up p_ac² p Δ ≥ 10` to `≥ M` for a
+  constant `M` and corrected the misprint that Theorem 1.7 keeps. The spectral bound of Lemma A.7
+  moved from a result of Bandeira and van Handel to Theorem 3.2 of Benaych-Georges, Bordenave and
+  Knowles; Theorems 1.2 and 1.5 are unchanged. No erratum of either paper was found.
 
 ### Formalizations
 
@@ -701,8 +715,7 @@ Plans for follow-up papers are kept in `NEXT.md`, which is not published.
 - **The threshold for random activations.** The corrected Theorems 1.7 and 4.1 need an initial gap
   of order `√(n/p_ac)`, and the counterexample shows that a gap `o(√n)` does not suffice at `p = 1`.
   The natural question is the exact threshold: for which `Δ` does Red win with probability tending to
-  1, and what is the limiting winning probability when `Δ` is of order `√(n/p_ac)`? The first day's
-  activation noise suggests a Gaussian limit in `Δ √(p_ac/n)`.
+  1, and what is the limiting winning probability when `Δ` is of order `√(n/p_ac)`?
 - **Biased random colourings.** The corrected Theorem 1.5 asks for a bias `ω(max{(pn)⁻¹, n^(−1/2)})`.
   When `p√n → ∞`, the argument of Theorem 1.4 (with Theorem 1.2 and the near-complete case of E1)
   shows that at bias `c n^(−1/2)` Red wins with probability tending to `Φ(2c)`, so the condition is
@@ -714,6 +727,19 @@ Plans for follow-up papers are kept in `NEXT.md`, which is not published.
   bounds closer to it in parts of the range (Section 10). Conjectures 1.13 and 1.15, on the regime
   near and below the connectivity threshold, are open. The dense Conjectures 1.7 and 1.8, stated for
   constant `p`, are proved by Sah and Sawhney.
+- **Remarks on the conjectures** (on paper; elementary). (i) For `pn = c log n` with `c ≤ 1/2`, the
+  graph has about `(c/2) n^(1−2c) log n → ∞` isolated edges, and a balanced colouring makes one of
+  them bichromatic with probability tending to 1; that edge swaps its colours every day, so the
+  function `f` of Conjecture 1.13 vanishes on `(0, 1/2]`, and there the conjecture's last part
+  asserts that the balanced start ends near balance. (ii) If Conjecture 1.11 covers `Δ = 0`, it
+  forces `f = 1` on `(1, ∞)` in Conjecture 1.13: for `c > 1` the second part of Conjecture 1.13
+  makes a stable end a unanimity with high probability, so at `Δ = 0` Red wins with probability
+  `f(c)/2 − o(1)`, while Conjecture 1.11 makes this limit independent of `c`. The paper's own
+  experiment sees period two above `pn = log n` at `n = 10⁴`. (iii) The two parts of the conjecture
+  of Benjamini et al. that the sparse paper quotes (their Conjecture 1.5: near balance for bounded
+  `d_n`, near unanimity for every `d_n → ∞`) cannot both hold: if the first holds for every constant
+  `d`, then for some `d_n → ∞` that grows slowly enough the process still ends near balance with
+  high probability. The question is the growth rate of `d_n` at which near unanimity sets in.
 - **The variance constant.** Proposition 2.2's `7n/12` is unproved for `p ≠ 1/2` (E15); simulations
   suggest a much smaller variance, and a sharper covariance bound would restore it.
 - **Removing hypotheses.** The papers need `p` bounded away from 1 (`pn ≤ n − 10`;

@@ -121,7 +121,8 @@ the TeX sources by a second reader.
   results, and Kim–Tran, Jaffe and Goel–Sah (preprints) extend the sparse ones
   ([REPORT.md](REPORT.md), Section 10).
 - No erratum of either paper, and no earlier report of the three false statements, was found;
-  Jaffe's 2025 preprint repeats the error of the sparse Theorem 1.5 in its Theorem 3.2.
+  B. Tran's 2025 thesis restates the sparse Theorems 1.7 and 4.1 unchanged, and Jaffe's 2025
+  preprint repeats the error of the sparse Theorem 1.5 in its Theorem 3.2.
 - No earlier formalization of these papers exists. The Lean formalization of Goel and Sah's
   theorem ([gopalkgoel/sparse-majority-dynamics-lean](https://github.com/gopalkgoel/sparse-majority-dynamics-lean))
   also proves the theorem of Fountoulakis, Kang and Makai, which these papers re-derive in delayed form;
