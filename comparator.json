@@ -1,0 +1,26 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": [
+    "Challenge.dense_theorem1_6",
+    "Challenge.dense_theorem1_2",
+    "Challenge.dense_theorem1_3",
+    "Challenge.sparse_theorem1_2",
+    "Challenge.sparse_theorem1_4",
+    "Challenge.sparse_theorem1_5",
+    "Challenge.sparse_theorem1_5_printed_false",
+    "Challenge.sparse_theorem3_1",
+    "Challenge.sparse_theorem1_7",
+    "Challenge.sparse_theorem4_1",
+    "Challenge.sparse_theorem1_7_printed_false_seq",
+    "Challenge.sparse_theorem4_1_printed_false_seq",
+    "Challenge.Φ_eq_cdf_gaussianReal"
+  ],
+  "definition_names": [],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": true
+}
