@@ -708,7 +708,7 @@ claims.
 
 ## 11. What's next
 
-Plans for follow-up papers are kept in `NEXT.md`, which is not published.
+Plans for follow-up papers are in [`NEXT.md`](NEXT.md).
 
 ### Open directions
 

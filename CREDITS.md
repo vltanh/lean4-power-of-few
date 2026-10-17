@@ -39,7 +39,7 @@ How it was made:
   [`Solution.lean`](Solution.lean) and Comparator, and three cleanup rounds.
 - **Audit:** the findings, verified by an independent agent against the TeX; the literature search
   and its independent verification; the report and its independent check.
-- **Follow-up papers:** a research agent and a second reader (the private `NEXT.md`). The second
+- **Follow-up papers:** a research agent and a second reader ([`NEXT.md`](NEXT.md)). The second
   reader also obtained B. Tran's thesis; the coordinator checked it, and the sparse paper's arXiv v1,
   against the report and corrected its literature section (commit `b0d1f95`).
 

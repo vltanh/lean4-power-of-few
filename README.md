@@ -134,7 +134,7 @@ With random activations, the natural question is the exact threshold for the ini
 corrected theorems put at order `√(n/p_ac)`; the papers' own conjectures on the optimal advantage and
 on the regime below connectivity remain open. The three assumed results are the formalization's own
 next step: the spectral bound could come from the Feige–Ofek argument. See [REPORT.md](REPORT.md),
-Section 11.
+Section 11, and, for papers that could follow, [`NEXT.md`](NEXT.md).
 
 ## Building
 
