@@ -127,6 +127,7 @@ meta def paperResults : List (String × Name) :=
    ("S Prop 4.2", ``PowerOfFew.Sparse.proposition4_2),
    ("S Prop 4.3", ``PowerOfFew.Sparse.proposition4_3),
    ("S Prop 4.4", ``PowerOfFew.Sparse.proposition4_4),
+   ("S Thm A.1 (Berry–Esseen)", ``PowerOfFew.ShevtsovaBerryEsseen),
    ("S Cor A.2", ``PowerOfFew.Sparse.corollaryA_2),
    ("S Lemma A.3", ``PowerOfFew.Sparse.lemmaA_3),
    ("S Lemma A.4", ``PowerOfFew.Sparse.lemmaA_4),

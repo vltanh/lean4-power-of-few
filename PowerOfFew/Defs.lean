@@ -160,7 +160,7 @@ def BerryEsseenInequality (C : ℝ) : Prop :=
       |μ.real {ω | ∑ i, X i ω ≤ x * Real.sqrt (∑ i, ∫ ω, X i ω ^ 2 ∂μ)} - Φ x| ≤
         C * (∑ i, ∫ ω, |X i ω| ^ 3 ∂μ) / Real.sqrt (∑ i, ∫ ω, X i ω ^ 2 ∂μ) ^ 3
 
-/-- **Shevtsova (2010)** (`D:thm:esseen`), *An improvement of convergence rate estimates in the
+/-- **Shevtsova (2010)** (`D:thm:esseen`, `S:thm:esseen`), *An improvement of convergence rate estimates in the
 Lyapunov theorem*, Doklady Mathematics 82(3), 862–864: the Berry–Esseen inequality holds with the
 constant `0.56`.
 Both papers use it (dense paper, Theorem 2.2; sparse paper, Theorem A.1). It is assumed, not
