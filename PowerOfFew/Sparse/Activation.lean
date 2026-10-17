@@ -13,7 +13,7 @@ activation rate `p_ac` and updating rate `p_up` (Definition 1.6; `lazyStep`, `la
 `theorem4_1_printed_false` and their per-sequence forms, in
 `PowerOfFew/Sparse/ActivationCounterexample.lean`): with `p = 1`, `p_ac = 1/2`, `p_up = 1` and
 `Δ = ⌊n^(1/4)⌋`, the difference between the active Red and Blue vertices on day 1 is
-`Δ ± Θ(√n)`, so it is at most `−2` with probability tending to `1/2`; then every active vertex
+`Δ ± Θ(√n)`, so it is at most `−1` with probability tending to `1/2`; then every active vertex
 turns Blue, and Blue only grows afterwards. The paper's proof of Proposition 4.2 assumes
 `p_ac^(1/2) Δ ≥ S_ε n^(1/2)`, which the theorems omit.
 
