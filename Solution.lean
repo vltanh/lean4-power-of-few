@@ -1,6 +1,7 @@
 module
 
 public import Basic.Analysis.SpecialFunctions.CubeRoot
+public import Basic.Analysis.SpecialFunctions.ExpLog
 public import Basic.Combinatorics.Choose
 public import Basic.Probability.BernoulliFamily
 public import Basic.Probability.Chernoff

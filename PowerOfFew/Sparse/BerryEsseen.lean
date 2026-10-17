@@ -33,11 +33,6 @@ namespace PowerOfFew.Sparse
 variable {Ω : Type} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ] {ι : Type*}
   {p : ℝ} {Y : ι → Ω → ℝ}
 
-/-- Each variable of a Bernoulli family is integrable: it is measurable with values in `{0, 1}`. -/
-theorem sparseAux_integrable (hY : IsBernoulliFamily μ p Y) (i : ι) : Integrable (Y i) μ := by
-  refine Integrable.of_bound (hY.measurable i).aestronglyMeasurable 1
-    (Eventually.of_forall fun ω => ?_)
-  rcases hY.zero_or_one i ω with h | h <;> simp [h]
 
 /-- **Corollary A.2** (`S:lem:strongesseen`). Let `p ∈ (0, 1)` and let `X₁, …, Xₙ` be independent
 variables such that each `Xᵢ ∼ Ber(p)` or `Xᵢ ∼ −Ber(p)`; let `X = ∑ Xᵢ` and `μ_X = E X`. Then
@@ -51,7 +46,7 @@ theorem corollaryA_2 (hBE : ShevtsovaBerryEsseen) (hp0 : 0 < p) (hp1 : p < 1)
       0.56 * (1 - 2 * (p * (1 - p))) / (Real.sqrt (p * (1 - p)) * Real.sqrt S.card) := by
   -- `μ_X = ∑ sᵢ p`, so that `X − μ_X = ∑ sᵢ (Yᵢ − p)`.
   have hint : ∫ ω', ∑ i ∈ S, s i * Y i ω' ∂μ = ∑ i ∈ S, s i * p := by
-    rw [integral_finsetSum S fun i _ => (sparseAux_integrable hY i).const_mul (s i)]
+    rw [integral_finsetSum S fun i _ => (hY.integrable i).const_mul (s i)]
     exact Finset.sum_congr rfl fun i _ => by rw [integral_const_mul, hY.integral_eq i]
   have hset : {ω | ∑ i ∈ S, s i * Y i ω - ∫ ω', ∑ i ∈ S, s i * Y i ω' ∂μ ≤ x} =
       {ω | ∑ i ∈ S, s i * (Y i ω - p) ≤ x} := by

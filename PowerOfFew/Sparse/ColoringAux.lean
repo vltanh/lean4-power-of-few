@@ -3,6 +3,7 @@ module
 public import PowerOfFew.Model.EdgeConditioning
 public import PowerOfFew.Model.Normal
 public import Basic.Probability.Chernoff
+public import Basic.Analysis.SpecialFunctions.ExpLog
 
 /-!
 # Random initial colourings: shared tools
@@ -451,14 +452,6 @@ theorem colorAux_degree_le_of_mem_majorityStep {n : ℕ} {G : SimpleGraph (Fin n
   have : degree G v ≤ 2 * B.ncard := by omega
   exact_mod_cast this
 
-/-- `x e^(−x/32) ≤ 2048 / x` for `x > 0`. -/
-theorem colorAux_mul_exp_le {x : ℝ} (hx : 0 < x) : x * Real.exp (-(x / 32)) ≤ 2048 / x := by
-  have hE : x ^ 2 / 2048 ≤ Real.exp (x / 32) := by
-    have := Real.quadratic_le_exp_of_nonneg (x := x / 32) (by positivity)
-    nlinarith
-  rw [Real.exp_neg, ← div_eq_mul_inv, div_le_div_iff₀ (Real.exp_pos _) hx]
-  nlinarith
-
 /-- **The near-complete case** (`pn > n − 10`, which the sparse paper's Theorem 1.2 excludes): if
 Red leads by at least `m > 1` vertices (`n − 2|B₀| ≥ m`), Red is unanimous after two days with
 probability at least `1 − 40/(m − 1) − 2048/n`.
@@ -529,7 +522,7 @@ theorem colorAux_nearComplete {n : ℕ} {p : ℝ} (hn : 44 ≤ n) (hp1 : p ≤ 1
       nlinarith
     refine (Finset.sum_le_sum fun v _ => hv v).trans ?_
     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-    exact colorAux_mul_exp_le (by linarith)
+    exact (Real.mul_exp_neg_div_le (a := 32) (by norm_num) (by linarith)).trans_eq (by norm_num)
   have hP2 : gnpProb n p (fun G => s ≤ ∑ v, ((n : ℝ) - 1 - degree G v)) ≤ 40 / (m - 1) := by
     refine (colorAux_nonEdges_ge_prob hp0 hp1 hs).trans ?_
     have hm1 : 0 < m - 1 := by linarith
@@ -547,17 +540,6 @@ theorem colorAux_nearComplete {n : ℕ} {p : ℝ} (hn : 44 ≤ n) (hp1 : p ≤ 1
     _ ≤ _ := gnpProb_or_le _ _
     _ ≤ 2048 / n + 40 / (m - 1) := add_le_add hP1 hP2
     _ = 40 / (m - 1) + 2048 / n := by ring
-
-/-! ### Elementary estimates -/
-
-/-- `log n ≤ 2 √n`. -/
-theorem colorAux_log_le_two_sqrt (n : ℕ) : Real.log n ≤ 2 * Real.sqrt n := by
-  rcases Nat.eq_zero_or_pos n with rfl | hn
-  · simp
-  have hn' : (0 : ℝ) < n := by exact_mod_cast hn
-  have h1 := Real.log_le_sub_one_of_pos (Real.sqrt_pos.mpr hn')
-  rw [Real.log_sqrt hn'.le] at h1
-  linarith
 
 end PowerOfFew
 

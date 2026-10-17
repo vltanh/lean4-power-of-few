@@ -39,7 +39,7 @@ namespace IsBernoulliFamily
 variable {μ : Measure Ω} [IsProbabilityMeasure μ] {p : ℝ} {X : ι → Ω → ℝ}
 
 /-- Each variable is bounded, hence integrable. -/
-theorem gnpAux_integrable (hX : IsBernoulliFamily μ p X) (i : ι) : Integrable (X i) μ := by
+theorem integrable (hX : IsBernoulliFamily μ p X) (i : ι) : Integrable (X i) μ := by
   refine Integrable.of_bound (hX.measurable i).aestronglyMeasurable 1
     (Filter.Eventually.of_forall fun ω => ?_)
   rcases hX.zero_or_one i ω with h | h <;> simp [h]
@@ -60,7 +60,7 @@ theorem integral_sq_sub (hX : IsBernoulliFamily μ p X) (i : ι) :
     intro ω
     rcases hX.zero_or_one i ω with h | h <;> rw [h] <;> ring
   simp_rw [h]
-  rw [integral_add ((gnpAux_integrable hX i).const_mul _) (integrable_const _), integral_const_mul,
+  rw [integral_add ((integrable hX i).const_mul _) (integrable_const _), integral_const_mul,
     hX.integral_eq i, integral_const]
   simp
   ring
@@ -76,7 +76,7 @@ theorem integral_abs_pow_three_sub (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ 
     · rw [abs_of_nonneg (by linarith)]
       ring
   simp_rw [h]
-  rw [integral_add ((gnpAux_integrable hX i).const_mul _) (integrable_const _), integral_const_mul,
+  rw [integral_add ((integrable hX i).const_mul _) (integrable_const _), integral_const_mul,
     hX.integral_eq i, integral_const]
   simp
   ring

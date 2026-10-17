@@ -53,7 +53,7 @@ theorem berryEsseen_signedBernoulli {C : ℝ} (hBE : BerryEsseenInequality C) {�
   have hY_int : ∀ j, ∫ ω, Y j ω ∂μ = 0 := by
     intro j
     simp only [Y]
-    rw [integral_const_mul, integral_sub (hX.gnpAux_integrable _) (integrable_const _),
+    rw [integral_const_mul, integral_sub (hX.integrable _) (integrable_const _),
       hX.integral_eq, integral_const]
     simp
   have hY_sq : ∀ j, ∫ ω, Y j ω ^ 2 ∂μ = σ2 := by

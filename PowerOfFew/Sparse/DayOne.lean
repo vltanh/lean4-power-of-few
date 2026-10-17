@@ -146,7 +146,7 @@ theorem sparseAux_prob_blue_le (hBE : ShevtsovaBerryEsseen) {n : ℕ} {p Δ c : 
   -- `E δ₀(v) = p ∑_{u ≠ v} ℓ₀(u) ≥ p (2Δ − 1)`
   set m := ∫ ω', ∑ u ∈ S, sg u * Y u ω' ∂(edgeLaw n p) with hm
   have hmint : m = p * ∑ u ∈ S, sg u := by
-    rw [hm, integral_finsetSum S fun i _ => (sparseAux_integrable hY i).const_mul (sg i),
+    rw [hm, integral_finsetSum S fun i _ => (hY.integrable i).const_mul (sg i),
       Finset.mul_sum]
     exact Finset.sum_congr rfl fun u _ => by rw [integral_const_mul, hY.integral_eq u]; ring
   have hsgsum : ∑ u : Fin n, sparseAux_sgn B₀ u = n - 2 * B₀.ncard := by

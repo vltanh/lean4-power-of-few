@@ -150,7 +150,7 @@ theorem theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : B
     rw [mul_assoc, hsq] at this
     exact this
   have hlog : (1 + 1) * Real.log n ≤ p * n := by
-    have := colorAux_log_le_two_sqrt n
+    have := Real.log_natCast_le_two_mul_sqrt n
     have : 4 * Real.sqrt n ≤ lam * Real.sqrt n := mul_le_mul_of_nonneg_right (by linarith) hsqrt0
     linarith
   -- if Red leads by `c'√n`, it wins within `T` days with probability `1 − ε/2`

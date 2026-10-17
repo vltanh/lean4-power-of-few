@@ -6,6 +6,7 @@ public meta import Lean.DocString
 -- traversal (the module system hides them from a plain `import`). Generate the lines with
 --   find PowerOfFew Basic -name '*.lean' | sort | sed 's/\.lean$//; s#/#.#g; s/^/import all /'
 import all Basic.Analysis.SpecialFunctions.CubeRoot
+import all Basic.Analysis.SpecialFunctions.ExpLog
 import all Basic.Combinatorics.Choose
 import all Basic.Probability.BernoulliFamily
 import all Basic.Probability.Chernoff

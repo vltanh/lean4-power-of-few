@@ -183,7 +183,7 @@ theorem appendixA (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BL
   -- `pn = (p√n)√n ≥ λ√n ≥ 4√n ≥ 2 log n`
   have hlog : (1 + 1) * Real.log n / n ≤ p := by
     rw [div_le_iff₀ hnR]
-    have h1 := colorAux_log_le_two_sqrt n
+    have h1 := Real.log_natCast_le_two_mul_sqrt n
     have h2 : p * n = p * Real.sqrt n * Real.sqrt n := by
       rw [mul_assoc, Real.mul_self_sqrt hnR.le]
     have h3 := mul_le_mul_of_nonneg_right hlam hsqrt0
