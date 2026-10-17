@@ -24,11 +24,13 @@ and those of `y` into blocks `T_j`. With `sᵢ = |S_i|`, `tⱼ = |T_j|`, `e_{ij}
    (a) if `log λ_{ij} > (1/4) log(n / tⱼ)`: `σ_{ij} αᵢ ≤ 4 c₃ 2^i / (2^j √d)`, a geometric sum
        over `i` (as `2^i ≤ √d 2^j`): at most `32 c₃`;
    (b) if not, and `log(n / tⱼ) ≤ 4 log 2^j`: then `λ_{ij} ≤ 2^j`, so `2^i < √d`, and
-       `log λ_{ij} ≥ 1`: `σ_{ij} αᵢ ≤ 4 c₃ (2^i / √d) (log 2^j / 2^j)`, at most `32 c₃`;
+       `log λ_{ij} ≥ 1`: `σ_{ij} αᵢ ≤ 4 c₃ (2^i / √d) (log 2^j / 2^j) ≤ 4 c₃ 2^i / √d`, a geometric
+       sum over `i`: at most `32 c₃`;
    (c) if not, and `log(n / tⱼ) > 4 log 2^j`: then `λ_{ij} ≤ 1 / βⱼ`, so
        `βⱼ σ_{ij} ≤ √d / 2^(i+j)`, a geometric sum over `j`: at most `8`.
 
-The pairs with `sᵢ > tⱼ` are bounded in the same way with the roles of `x` and `y` exchanged. In
+The pairs with `tⱼ ≤ sᵢ` are bounded in the same way with the roles of `x` and `y` exchanged (the
+pairs with `sᵢ = tⱼ` are counted twice, which only enlarges the bound). In
 total the heavy pairs contribute at most `2 (24 + 8 c₁ + 16 c₂ + 64 c₃) √d`.
 -/
 
@@ -36,7 +38,7 @@ total the heavy pairs contribute at most `2 (24 + 8 c₁ + 16 c₂ + 64 c₃) �
 
 noncomputable section
 
-namespace PowerOfFew.FeigeOfek
+namespace External.FeigeOfek
 
 /-! ### Geometric sums over finite sets of exponents -/
 
@@ -499,4 +501,4 @@ theorem sum_blocks_le {n d c₁ c₂ c₃ : ℝ} (hn : 0 < n) (hd : 0 < d) (hc�
         (24 + 8 * c₁ + 16 * c₂ + 64 * c₃) * Real.sqrt d := add_le_add h1 h2
     _ = 2 * (24 + 8 * c₁ + 16 * c₂ + 64 * c₃) * Real.sqrt d := by ring
 
-end PowerOfFew.FeigeOfek
+end External.FeigeOfek

@@ -12,7 +12,7 @@ independent Bernoulli(`p`) variables and the weights are small: if `θ |aᵢ| �
 `eˢ − 1 − s ≤ s²` for `|s| ≤ 1`.
 
 Feige and Ofek use this bound, in the form of Bernstein's inequality, for the light pairs of their
-bound on the spectral norm of a random graph (`PowerOfFew.FeigeOfek.lightSum_le`).
+bound on the spectral norm of a random graph (`External.FeigeOfek.lightSum_le`).
 -/
 
 @[expose] public section

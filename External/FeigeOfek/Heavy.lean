@@ -1,25 +1,25 @@
 module
 
-public import PowerOfFew.External.FeigeOfek.Defs
-public import PowerOfFew.External.FeigeOfek.SixCases
+public import External.FeigeOfek.Defs
+public import External.FeigeOfek.SixCases
 
 /-!
 # Feige and Ofek's bound for the heavy pairs
 
 If every degree of `G` is at most `c₁ d` and `G` has the discrepancy property with constants
 `c₂, c₃`, then for all `x, y` in the unit ball the heavy pairs (`|xᵤ y_v| > √d / n`) contribute
-`∑ |xᵤ| A_{uv} |y_v| ≤ 2 (24 + 8 c₁ + 16 c₂ + 64 c₃) √d` (Feige–Ofek 2005, Section 2.2; Chin–Rao–Vu
-2015, their heavy-pair lemma). The proof groups the coordinates into dyadic blocks
-`S_i = {u : xᵤ ≠ 0, 2^(i−1) < √n |xᵤ| ≤ 2^i}` (the integer `i` is `Int.clog 2 (√n |xᵤ|)`) and `T_j`
-for `y`, bounds the heavy pairs by `∑_{2^(i+j) > √d} e(S_i, T_j) 2^(i+j) / n`, and applies the six
-cases (`sum_blocks_le`).
+`∑ |xᵤ| A_{uv} |y_v| ≤ 2 (24 + 8 c₁ + 16 c₂ + 64 c₃) √d`, where `A = G.adjMatrix ℝ`
+(Feige–Ofek 2005, Section 2.2; Chin–Rao–Vu 2015, their heavy-pair lemma). The proof groups the
+coordinates into dyadic blocks `S_i = {u : xᵤ ≠ 0, 2^(i−1) < √n |xᵤ| ≤ 2^i}` (the integer `i` is
+`Int.clog 2 (√n |xᵤ|)`) and `T_j` for `y`, bounds the heavy pairs by
+`∑_{2^(i+j) > √d} e(S_i, T_j) 2^(i+j) / n`, and applies the six cases (`sum_blocks_le`).
 -/
 
 @[expose] public section
 
 noncomputable section
 
-namespace PowerOfFew.FeigeOfek
+namespace External.FeigeOfek
 
 /-! ### Dyadic blocks of a vector -/
 
@@ -129,36 +129,40 @@ private lemma fo3bAux_sum_alpha {n : ℕ} (hn : 0 < n) (x : Fin n → ℝ) (hx :
 
 /-! ### Edge counts -/
 
-private lemma fo3bAux_adjMat_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
-    0 ≤ adjMat G u v := by
-  simp only [adjMat, Matrix.of_apply]
+open Classical in
+private lemma fo3bAux_adjMatrix_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
+    0 ≤ G.adjMatrix ℝ u v := by
+  rw [SimpleGraph.adjMatrix_apply]
   split_ifs <;> norm_num
 
-private lemma fo3bAux_adjMat_comm {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
-    adjMat G u v = adjMat G v u := by
+open Classical in
+private lemma fo3bAux_adjMatrix_comm {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
+    G.adjMatrix ℝ u v = G.adjMatrix ℝ v u := by
   by_cases h : G.Adj u v
-  · simp [adjMat, h, h.symm]
+  · simp [h, h.symm]
   · have h' : ¬ G.Adj v u := fun h' => h h'.symm
-    simp [adjMat, h, h']
+    simp [h, h']
 
 private lemma fo3bAux_edgeCount_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) (S T : Finset (Fin n)) :
     0 ≤ edgeCount G S T :=
-  Finset.sum_nonneg fun u _ => Finset.sum_nonneg fun v _ => fo3bAux_adjMat_nonneg G u v
+  Finset.sum_nonneg fun u _ => Finset.sum_nonneg fun v _ => fo3bAux_adjMatrix_nonneg G u v
 
 private lemma fo3bAux_edgeCount_comm {n : ℕ} (G : SimpleGraph (Fin n)) (S T : Finset (Fin n)) :
     edgeCount G S T = edgeCount G T S := by
   unfold edgeCount
   refine Finset.sum_comm.trans ?_
-  exact Finset.sum_congr rfl fun v _ => Finset.sum_congr rfl fun u _ => fo3bAux_adjMat_comm G u v
+  exact Finset.sum_congr rfl fun v _ => Finset.sum_congr rfl fun u _ =>
+    fo3bAux_adjMatrix_comm G u v
 
 /-- Bounded degrees: `e(S, T) ≤ c₁ d |S|`. -/
 private lemma fo3bAux_edgeCount_le {n : ℕ} {G : SimpleGraph (Fin n)} {d c₁ : ℝ}
     (hdeg : DegreeBound G d c₁) (S T : Finset (Fin n)) :
     edgeCount G S T ≤ c₁ * d * S.card := by
+  classical
   unfold edgeCount
-  calc ∑ u ∈ S, ∑ v ∈ T, adjMat G u v ≤ ∑ u ∈ S, ∑ v, adjMat G u v :=
+  calc ∑ u ∈ S, ∑ v ∈ T, G.adjMatrix ℝ u v ≤ ∑ u ∈ S, ∑ v, G.adjMatrix ℝ u v :=
         Finset.sum_le_sum fun u _ => Finset.sum_le_sum_of_subset_of_nonneg
-          (Finset.subset_univ T) fun v _ _ => fo3bAux_adjMat_nonneg G u v
+          (Finset.subset_univ T) fun v _ _ => fo3bAux_adjMatrix_nonneg G u v
     _ ≤ ∑ _u ∈ S, c₁ * d := Finset.sum_le_sum fun u _ => hdeg u
     _ = c₁ * d * S.card := by rw [Finset.sum_const, nsmul_eq_mul]; ring
 
@@ -195,19 +199,21 @@ private lemma fo3bAux_term_le {n : ℕ} (hn : 0 < n) {d a : ℝ} (ha : 0 ≤ a) 
     · exact div_nonneg (mul_nonneg ha hKpos.le) hn'.le
     · exact le_rfl
 
+open Classical in
 /-- The pairs `(u, v) ∈ S_i × T_j` together contribute
 `[√d < 2^(i+j)] e(S_i, T_j) 2^(i+j) / n`. -/
 private lemma fo3bAux_block_sum_eq {n : ℕ} (G : SimpleGraph (Fin n)) (d : ℝ) (x y : Fin n → ℝ)
     (i j : ℤ) :
     ∑ u ∈ fo3bAux_block x i, ∑ v ∈ fo3bAux_block y j,
         (if Real.sqrt d < (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) then
-          adjMat G u v * (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) / n else 0) =
+          G.adjMatrix ℝ u v * (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) / n else 0) =
       if Real.sqrt d < (2 : ℝ) ^ (i + j) then
         edgeCount G (fo3bAux_block x i) (fo3bAux_block y j) * (2 : ℝ) ^ (i + j) / n else 0 := by
   have h : ∀ u ∈ fo3bAux_block x i, ∀ v ∈ fo3bAux_block y j,
       (if Real.sqrt d < (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) then
-        adjMat G u v * (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) / n else 0) =
-      if Real.sqrt d < (2 : ℝ) ^ (i + j) then adjMat G u v * (2 : ℝ) ^ (i + j) / n else 0 := by
+        G.adjMatrix ℝ u v * (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) / n else 0) =
+      if Real.sqrt d < (2 : ℝ) ^ (i + j) then G.adjMatrix ℝ u v * (2 : ℝ) ^ (i + j) / n
+        else 0 := by
     intro u hu v hv
     rw [(fo3bAux_mem_block.1 hu).2, (fo3bAux_mem_block.1 hv).2]
   rw [Finset.sum_congr rfl fun u hu => Finset.sum_congr rfl fun v hv => h u hu v hv]
@@ -223,6 +229,7 @@ theorem heavySum_le {n : ℕ} (G : SimpleGraph (Fin n)) {d c₁ c₂ c₃ : ℝ}
     (hdisc : Discrepancy G d c₂ c₃) (x y : Fin n → ℝ) (hx : ∑ u, x u ^ 2 ≤ 1)
     (hy : ∑ v, y v ^ 2 ≤ 1) :
     heavySum G d x y ≤ 2 * (24 + 8 * c₁ + 16 * c₂ + 64 * c₃) * Real.sqrt d := by
+  classical
   rcases Nat.eq_zero_or_pos n with rfl | hn
   · have hc₂0 : 0 < c₂ := (Real.exp_pos 1).trans_le hc₂
     have h0 : heavySum G d x y = 0 := by simp [heavySum]
@@ -235,23 +242,24 @@ theorem heavySum_le {n : ℕ} (G : SimpleGraph (Fin n)) {d c₁ c₂ c₃ : ℝ}
         edgeCount G (fo3bAux_block x i) (fo3bAux_block y j) * (2 : ℝ) ^ (i + j) / n else 0) := by
     calc heavySum G d x y
         = ∑ u, ∑ v,
-            (if Real.sqrt d / n < |x u * y v| then |x u| * adjMat G u v * |y v| else 0) := rfl
+            (if Real.sqrt d / n < |x u * y v| then |x u| * G.adjMatrix ℝ u v * |y v| else 0) :=
+          rfl
       _ = ∑ u ∈ fo3bAux_supp x, ∑ v,
-            (if Real.sqrt d / n < |x u * y v| then |x u| * adjMat G u v * |y v| else 0) := by
+            (if Real.sqrt d / n < |x u * y v| then |x u| * G.adjMatrix ℝ u v * |y v| else 0) := by
           refine (Finset.sum_subset (Finset.subset_univ _) fun u _ hu => ?_).symm
           have hu0 : x u = 0 := by simpa [fo3bAux_mem_supp] using hu
           simp [hu0]
       _ = ∑ u ∈ fo3bAux_supp x, ∑ v ∈ fo3bAux_supp y,
-            (if Real.sqrt d / n < |x u * y v| then |x u| * adjMat G u v * |y v| else 0) := by
+            (if Real.sqrt d / n < |x u * y v| then |x u| * G.adjMatrix ℝ u v * |y v| else 0) := by
           refine Finset.sum_congr rfl fun u _ =>
             (Finset.sum_subset (Finset.subset_univ _) fun v _ hv => ?_).symm
           have hv0 : y v = 0 := by simpa [fo3bAux_mem_supp] using hv
           simp [hv0]
       _ ≤ ∑ u ∈ fo3bAux_supp x, ∑ v ∈ fo3bAux_supp y,
             (if Real.sqrt d < (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) then
-              adjMat G u v * (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) / n else 0) :=
+              G.adjMatrix ℝ u v * (2 : ℝ) ^ (fo3bAux_idx x u + fo3bAux_idx y v) / n else 0) :=
           Finset.sum_le_sum fun u _ => Finset.sum_le_sum fun v _ =>
-            fo3bAux_term_le hn (fo3bAux_adjMat_nonneg G u v) x y
+            fo3bAux_term_le hn (fo3bAux_adjMatrix_nonneg G u v) x y
       _ = _ := by
           rw [fo3bAux_sum_supp_eq]
           exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ =>
@@ -268,4 +276,4 @@ theorem heavySum_le {n : ℕ} (G : SimpleGraph (Fin n)) {d c₁ c₂ c₃ : ℝ}
   rw [fo3bAux_edgeCount_comm]
   exact fo3bAux_edgeCount_le hdeg _ _
 
-end PowerOfFew.FeigeOfek
+end External.FeigeOfek

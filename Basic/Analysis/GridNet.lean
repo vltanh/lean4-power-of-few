@@ -13,7 +13,7 @@ operator norm of a square matrix is at most twice the largest value of its bilin
 (`Matrix.norm_toEuclideanCLM_le_of_gridNet`).
 
 Feige and Ofek bound the spectral norm of a random graph through such a net
-(`PowerOfFew.FeigeOfek.feigeOfek`). The bound on the number of points is the exponential-moment
+(`External.FeigeOfek.opNorm_adjMatrix_sub_le`). The bound on the number of points is the exponential-moment
 count `#{z : ∑ zᵢ² ≤ 16 n} ≤ e^(t · 16 n) (∑_{m ∈ ℤ} e^(−t m²))ⁿ` with `t = 1/16`, and
 `∑_{m ∈ ℤ} e^(−m²/16) ≤ 1 + 2 / (e^(1/16) − 1) ≤ 33`.
 -/

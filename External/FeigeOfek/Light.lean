@@ -1,7 +1,6 @@
 module
 
-public import PowerOfFew.External.FeigeOfek.Defs
-public import PowerOfFew.Model.Gnp
+public import External.FeigeOfek.Defs
 public import Basic.Probability.WeightedBernoulli
 public import Basic.Analysis.GridNet
 
@@ -10,8 +9,8 @@ public import Basic.Analysis.GridNet
 
 For `x, y` in the grid net, the light part of `xᵀ (A − E A) y` (the pairs `u ≠ v` with
 `|xᵤ y_v| ≤ √d / n`, `d = pn`) is a weighted sum `∑ a_{uv} (X_{uv} − p)`, over the unordered
-pairs `{u, v}`, of the independent edge indicators `X_{uv}`, with
-`a_{uv} = xᵤ y_v [(u, v) light] + x_v yᵤ [(v, u) light]`, so
+pairs `{u, v}`, of the independent edge indicators `X_{uv}` (`SimpleGraph.edgeInd` under
+`SimpleGraph.edgeLaw`), with `a_{uv} = xᵤ y_v [(u, v) light] + x_v yᵤ [(v, u) light]`, so
 `|a_{uv}| ≤ 2√d / n` and `∑ a_{uv}² ≤ 2`. The exponential-moment bound with `θ = n / (2√d)`
 (`IsBernoulliFamily.integral_exp_mul_sum_le`) gives `P(|light| > 21 √d) ≤ 2 e^(−10 n)`, and the net
 has at most `(33 e)ⁿ ≤ e^(4.5 n)` points, so a union bound over the pairs of points gives the
@@ -22,9 +21,12 @@ bound below (Feige–Ofek 2005, Section 2.2; Chin–Rao–Vu 2015, the light pai
 
 open MeasureTheory ProbabilityTheory
 
+open SimpleGraph (EdgeVars OffDiag edgeLaw graphOfEdges edgeInd adj_graphOfEdges
+  isBernoulliFamily_edgeInd)
+
 noncomputable section
 
-namespace PowerOfFew.FeigeOfek
+namespace External.FeigeOfek
 
 /-! ### Sums over the pairs of distinct vertices -/
 
@@ -40,7 +42,7 @@ private theorem fo5Aux_sum_ite_ne {n : ℕ} (f : Fin n × Fin n → ℝ) :
   rw [h, Finset.sum_filter, Finset.sum_product]
 
 /-- Each pair of distinct vertices comes from exactly two ordered pairs (the argument of
-`appAux_sum_offDiag` in `PowerOfFew/Sparse/MatrixNorm.lean`). -/
+`appAux_sum_offDiag` in `PowerOfFew/Sparse/MatrixNormDerivation.lean`). -/
 private theorem fo5Aux_sum_offDiag {n : ℕ} (g : Sym2 (Fin n) → ℝ) :
     ∑ x ∈ (Finset.univ : Finset (Fin n)).offDiag, g s(x.1, x.2) = 2 * ∑ z : OffDiag n, g z.1 := by
   classical
@@ -171,12 +173,13 @@ private theorem fo5Aux_sum_sq_a_le {n : ℕ} (r : ℝ) {x y : Fin n → ℝ} (hx
 
 /-! ### The light part as a weighted sum of the edge indicators -/
 
+open Classical in
 /-- For `u ≠ v`, the entry `(u, v)` of the adjacency matrix of `graphOfEdges ω` is the edge
 indicator of `{u, v}`. -/
-private theorem fo5Aux_adjMat {n : ℕ} {ω : EdgeVars n} {u v : Fin n} (huv : u ≠ v) :
-    adjMat (graphOfEdges ω) u v = edgeInd s(u, v) ω := by
-  unfold adjMat edgeInd
-  simp only [Matrix.of_apply]
+private theorem fo5Aux_adjMatrix {n : ℕ} {ω : EdgeVars n} {u v : Fin n} (huv : u ≠ v) :
+    (graphOfEdges ω).adjMatrix ℝ u v = edgeInd s(u, v) ω := by
+  unfold edgeInd
+  rw [SimpleGraph.adjMatrix_apply]
   by_cases hω : ω s(u, v)
   · have hadj : (graphOfEdges ω).Adj u v := adj_graphOfEdges.mpr ⟨huv, hω⟩
     simp only [hω, hadj, ↓reduceIte]
@@ -194,7 +197,7 @@ private theorem fo5Aux_lightSum_eq {n : ℕ} (p d : ℝ) (x y : Fin n → ℝ) (
     refine Finset.sum_congr rfl fun u _ => Finset.sum_congr rfl fun v _ => ?_
     by_cases huv : u = v
     · simp [huv]
-    · rw [fo5Aux_adjMat huv]
+    · rw [fo5Aux_adjMatrix huv]
       unfold fo5Aux_c
       by_cases hl : |x u * y v| ≤ Real.sqrt d / n
       · rw [ite_eq_left ⟨huv, hl⟩, ite_eq_left huv, ite_eq_left hl]
@@ -217,7 +220,7 @@ private theorem fo5Aux_lightSum_eq {n : ℕ} (p d : ℝ) (x y : Fin n → ℝ) (
 /-- **Steps 2 and 3.** For `x, y` in the unit ball, `P(|light| > 21 √(pn)) ≤ 2 e^(−10 n)`. -/
 private theorem fo5Aux_pair {n : ℕ} {p : ℝ} (hn : 1 ≤ n) (hp0 : 0 < p) (hp1 : p ≤ 1)
     {x y : Fin n → ℝ} (hx : ∑ i, x i ^ 2 ≤ 1) (hy : ∑ i, y i ^ 2 ≤ 1) :
-    gnpProb n p (fun G => 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) ≤
+    prob n p (fun G => 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) ≤
       2 * Real.exp (-(10 * n)) := by
   have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
   have hd : 0 < p * n := mul_pos hp0 hnpos
@@ -258,7 +261,7 @@ private theorem fo5Aux_pair {n : ℕ} {p : ℝ} (hn : 1 ≤ n) (hp0 : 0 < p) (hp
       -(10 * n) := by
     rw [hpθ, hθt]
     nlinarith
-  rw [gnpProb_eq]
+  rw [prob_eq]
   calc (edgeLaw n p).real {ω | 21 * Real.sqrt (p * n) < |lightSum (graphOfEdges ω) p (p * n) x y|}
       ≤ (edgeLaw n p).real ({ω | 21 * Real.sqrt (p * n) ≤ ∑ z, a z * (edgeInd z.1 ω - p)} ∪
           {ω | 21 * Real.sqrt (p * n) ≤ ∑ z, (fun z => -a z) z * (edgeInd z.1 ω - p)}) := by
@@ -317,18 +320,18 @@ private theorem fo5Aux_final (n : ℕ) :
 /-- **Feige–Ofek, the light pairs.** With probability at least `1 − 2e^(−n)`, every pair `x, y` of
 points of the grid net satisfies `|lightSum G p (pn) x y| ≤ 21 √(pn)`. -/
 theorem lightSum_le {n : ℕ} {p : ℝ} (hn : 1 ≤ n) (hp0 : 0 < p) (hp1 : p ≤ 1) :
-    gnpProb n p (fun G => ∃ x ∈ gridNet n, ∃ y ∈ gridNet n,
+    prob n p (fun G => ∃ x ∈ gridNet n, ∃ y ∈ gridNet n,
       21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) ≤ 2 * Real.exp (-n) := by
-  have hU := gnpProb_exists_le (n := n) (p := p) (gridNet n)
+  have hU := prob_exists_le (n := n) (p := p) (gridNet n)
     (fun x G => ∃ y ∈ gridNet n, 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|)
   refine hU.trans ?_
   have hcard := card_gridNet_le n
   have hc0 : (0 : ℝ) ≤ (gridNet n).card := Nat.cast_nonneg _
-  calc ∑ x ∈ gridNet n, gnpProb n p
+  calc ∑ x ∈ gridNet n, prob n p
         (fun G => ∃ y ∈ gridNet n, 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|)
       ≤ ∑ x ∈ gridNet n, ∑ y ∈ gridNet n,
-          gnpProb n p (fun G => 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) :=
-        Finset.sum_le_sum fun x _ => gnpProb_exists_le (gridNet n)
+          prob n p (fun G => 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) :=
+        Finset.sum_le_sum fun x _ => prob_exists_le (gridNet n)
           (fun y G => 21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|)
     _ ≤ ∑ x ∈ gridNet n, ∑ y ∈ gridNet n, 2 * Real.exp (-(10 * n)) :=
         Finset.sum_le_sum fun x hx => Finset.sum_le_sum fun y hy =>
@@ -340,4 +343,4 @@ theorem lightSum_le {n : ℕ} {p : ℝ} (hn : 1 ≤ n) (hp0 : 0 < p) (hp1 : p �
         gcongr
     _ ≤ 2 * Real.exp (-n) := fo5Aux_final n
 
-end PowerOfFew.FeigeOfek
+end External.FeigeOfek

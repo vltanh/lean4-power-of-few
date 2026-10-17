@@ -16,7 +16,7 @@ family of independent Bernoulli(`p`) variables and `m = #s` (so `Z ∼ Bin(m, p)
   `T < pm` (sparse paper, proof of Lemma A.6, its equations (29) and (30));
 * `IsBernoulliFamily.measureReal_sum_ge_le_exp_mul_log`: the upper tail
   `P(Z ≥ k) ≤ (e p m / k)^k` for `k > 0`, used by Feige and Ofek's argument
-  (`PowerOfFew.FeigeOfek`) for the degrees and the discrepancy of `G(n, p)`.
+  (`External.FeigeOfek`) for the degrees and the discrepancy of `G(n, p)`.
 -/
 
 @[expose] public section

@@ -1,15 +1,18 @@
 module
 
-public import PowerOfFew.External.FeigeOfek.Heavy
-public import PowerOfFew.External.FeigeOfek.Properties
-public import PowerOfFew.External.FeigeOfek.Light
+public import External.FeigeOfek.Heavy
+public import External.FeigeOfek.Properties
+public import External.FeigeOfek.Light
 
 /-!
 # Feige and Ofek's bound on the spectral norm of `G(n, p)`
 
 U. Feige and E. Ofek, *Spectral techniques applied to sparse random graphs*, Random Structures &
 Algorithms 27 (2005) 251–275, Section 2: for `pn ≥ c log n`, the adjacency matrix `A` of `G(n, p)`
-satisfies `‖A − E A‖ = O(√(pn))` with high probability. The proof:
+satisfies `‖A − E A‖ = O(√(pn))` with high probability. Here `G(n, p)` is Mathlib's
+`SimpleGraph.binomialRandom (Fin n)`, `A` is Mathlib's `G.adjMatrix ℝ`, `E A` has `p` off the
+diagonal and `0` on it, and `‖·‖` is the operator norm of `Matrix.toEuclideanCLM`, on `ℓ²`. The
+proof:
 
 * the operator norm is at most twice the largest value of `xᵀ (A − E A) y` over the grid net
   (`Matrix.norm_toEuclideanCLM_le_of_gridNet`);
@@ -22,8 +25,9 @@ satisfies `‖A − E A‖ = O(√(pn))` with high probability. The proof:
 * for `n` below a threshold `N`, `‖A − E A‖ ≤ ‖A − E A‖_F ≤ n < N ≤ (N / √(c log 2)) √(pn)`
   (and `n ≤ 1` is trivial).
 
-The sparse paper's Lemma A.7 has exactly this statement; the formalization proves it from this
-theorem (`PowerOfFew.Sparse.lemmaA_7`).
+The sparse paper's Lemma A.7 is this statement for the papers' adjacency matrix, mean matrix,
+spectral norm and `G(n, p)`; the papers' library proves it from this theorem
+(`PowerOfFew.Sparse.lemmaA_7`), identifying them with Mathlib's.
 -/
 
 @[expose] public section
@@ -32,14 +36,13 @@ open MeasureTheory ProbabilityTheory
 
 noncomputable section
 
-namespace PowerOfFew.FeigeOfek
+namespace External.FeigeOfek
 
 /-! ### Small `n`: the Frobenius norm -/
 
 /-- The spectral norm is at most the Frobenius norm (Cauchy–Schwarz, row by row). -/
-private theorem fo6Aux_specNorm_le_frobenius {n : ℕ} (M : Matrix (Fin n) (Fin n) ℝ) :
-    specNorm M ≤ Real.sqrt (∑ i, ∑ j, M i j ^ 2) := by
-  unfold specNorm
+private theorem fo6Aux_opNorm_le_frobenius {n : ℕ} (M : Matrix (Fin n) (Fin n) ℝ) :
+    ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) M‖ ≤ Real.sqrt (∑ i, ∑ j, M i j ^ 2) := by
   refine ContinuousLinearMap.opNorm_le_bound _ (Real.sqrt_nonneg _) fun x => ?_
   rw [← Real.sqrt_sq (norm_nonneg (Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) M x)),
     ← Real.sqrt_sq (norm_nonneg x), ← Real.sqrt_mul (by positivity)]
@@ -51,32 +54,40 @@ private theorem fo6Aux_specNorm_le_frobenius {n : ℕ} (M : Matrix (Fin n) (Fin 
   rw [this]
   exact Finset.sum_mul_sq_le_sq_mul_sq _ _ _
 
+open Classical in
 /-- `‖A − E A‖ ≤ ‖A − E A‖_F ≤ n`, as the entries of `A − E A` lie in `[−1, 1]`. -/
-private theorem fo6Aux_specNorm_le_card {n : ℕ} {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
-    (G : SimpleGraph (Fin n)) : specNorm (adjMat G - meanAdj n p) ≤ n := by
-  have hentry : ∀ u v, (adjMat G - meanAdj n p) u v ^ 2 ≤ 1 := by
-    intro u v
-    simp only [Matrix.sub_apply, adjMat, meanAdj, Matrix.of_apply]
+private theorem fo6Aux_opNorm_le_card {n : ℕ} {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
+    (G : SimpleGraph (Fin n)) :
+    ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+        (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤ n := by
+  have hentry : ∀ i j, (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p :
+      Matrix (Fin n) (Fin n) ℝ) i j ^ 2 ≤ 1 := by
+    intro i j
+    simp only [Matrix.sub_apply, SimpleGraph.adjMatrix_apply, Matrix.of_apply]
     split_ifs <;> nlinarith
-  have h2 : ∑ u, ∑ v, (adjMat G - meanAdj n p) u v ^ 2 ≤ (n : ℝ) ^ 2 := by
-    calc ∑ u, ∑ v, (adjMat G - meanAdj n p) u v ^ 2
-        ≤ ∑ _u : Fin n, ∑ _v : Fin n, (1 : ℝ) :=
-          Finset.sum_le_sum fun u _ => Finset.sum_le_sum fun v _ => hentry u v
+  have h2 : ∑ i, ∑ j, (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p :
+      Matrix (Fin n) (Fin n) ℝ) i j ^ 2 ≤ (n : ℝ) ^ 2 := by
+    calc ∑ i, ∑ j, (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p :
+          Matrix (Fin n) (Fin n) ℝ) i j ^ 2
+        ≤ ∑ _i : Fin n, ∑ _j : Fin n, (1 : ℝ) :=
+          Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j _ => hentry i j
       _ = (n : ℝ) ^ 2 := by simp [sq]
-  refine (fo6Aux_specNorm_le_frobenius _).trans ?_
+  refine (fo6Aux_opNorm_le_frobenius _).trans ?_
   rw [← Real.sqrt_sq (Nat.cast_nonneg n)]
   exact Real.sqrt_le_sqrt h2
 
 /-! ### The bilinear form on the net: light and heavy parts -/
 
+open Classical in
 /-- `xᵀ (A − E A) y` is its light part plus its heavy part: the diagonal terms vanish, and
 `(A − E A)ᵤᵥ = Aᵤᵥ − p` for `u ≠ v`. -/
 private theorem fo6Aux_bilin_eq {n : ℕ} (G : SimpleGraph (Fin n)) (p d : ℝ)
     (x y : Fin n → ℝ) :
-    ∑ u, ∑ v, x u * (adjMat G - meanAdj n p) u v * y v =
+    ∑ i, ∑ j, x i * (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p :
+        Matrix (Fin n) (Fin n) ℝ) i j * y j =
       lightSum G p d x y +
         ∑ u, ∑ v, if u ≠ v ∧ Real.sqrt d / n < |x u * y v| then
-          x u * (adjMat G u v - p) * y v else 0 := by
+          x u * (G.adjMatrix ℝ u v - p) * y v else 0 := by
   unfold lightSum
   rw [← Finset.sum_add_distrib]
   refine Finset.sum_congr rfl fun u _ => ?_
@@ -84,9 +95,10 @@ private theorem fo6Aux_bilin_eq {n : ℕ} (G : SimpleGraph (Fin n)) (p d : ℝ)
   refine Finset.sum_congr rfl fun v _ => ?_
   by_cases huv : u = v
   · subst huv
-    simp [adjMat, meanAdj]
-  · have hentry : (adjMat G - meanAdj n p) u v = adjMat G u v - p := by
-      simp [meanAdj, huv]
+    simp
+  · have hentry : (G.adjMatrix ℝ - Matrix.of fun i j => if i = j then 0 else p :
+        Matrix (Fin n) (Fin n) ℝ) u v = G.adjMatrix ℝ u v - p := by
+      simp [huv]
     rw [hentry]
     by_cases hl : |x u * y v| ≤ Real.sqrt d / n
     · have hh : ¬ (Real.sqrt d / n < |x u * y v|) := not_lt.mpr hl
@@ -94,12 +106,13 @@ private theorem fo6Aux_bilin_eq {n : ℕ} (G : SimpleGraph (Fin n)) (p d : ℝ)
     · have hh : Real.sqrt d / n < |x u * y v| := lt_of_not_ge hl
       rw [ite_eq_right fun h => hl h.2, ite_eq_left ⟨huv, hh⟩, zero_add]
 
+open Classical in
 /-- The heavy part is at most `heavySum G d x y + p ∑_{heavy} |xᵤ y_v|`, as
 `|Aᵤᵥ − p| ≤ Aᵤᵥ + p`. -/
 private theorem fo6Aux_heavy_le {n : ℕ} (G : SimpleGraph (Fin n)) {p : ℝ} (hp0 : 0 ≤ p)
     (d : ℝ) (x y : Fin n → ℝ) :
     |∑ u, ∑ v, if u ≠ v ∧ Real.sqrt d / n < |x u * y v| then
-        x u * (adjMat G u v - p) * y v else 0| ≤
+        x u * (G.adjMatrix ℝ u v - p) * y v else 0| ≤
       heavySum G d x y +
         p * ∑ u, ∑ v, if Real.sqrt d / n < |x u * y v| then |x u * y v| else 0 := by
   unfold heavySum
@@ -107,8 +120,8 @@ private theorem fo6Aux_heavy_le {n : ℕ} (G : SimpleGraph (Fin n)) {p : ℝ} (h
   refine (Finset.abs_sum_le_sum_abs _ _).trans (Finset.sum_le_sum fun u _ => ?_)
   rw [Finset.mul_sum, ← Finset.sum_add_distrib]
   refine (Finset.abs_sum_le_sum_abs _ _).trans (Finset.sum_le_sum fun v _ => ?_)
-  have hA0 : 0 ≤ adjMat G u v := by
-    simp only [adjMat, Matrix.of_apply]
+  have hA0 : 0 ≤ G.adjMatrix ℝ u v := by
+    rw [SimpleGraph.adjMatrix_apply]
     split_ifs <;> norm_num
   by_cases hh : Real.sqrt d / n < |x u * y v|
   · rw [ite_eq_left hh, ite_eq_left hh]
@@ -116,13 +129,13 @@ private theorem fo6Aux_heavy_le {n : ℕ} (G : SimpleGraph (Fin n)) {p : ℝ} (h
     · rw [ite_eq_right fun h => h.1 huv, abs_zero]
       positivity
     · rw [ite_eq_left ⟨huv, hh⟩]
-      have hAp : |adjMat G u v - p| ≤ adjMat G u v + p := by
+      have hAp : |G.adjMatrix ℝ u v - p| ≤ G.adjMatrix ℝ u v + p := by
         rw [abs_le]
         constructor <;> linarith
       simp only [abs_mul]
-      calc |x u| * |adjMat G u v - p| * |y v| ≤ |x u| * (adjMat G u v + p) * |y v| := by
+      calc |x u| * |G.adjMatrix ℝ u v - p| * |y v| ≤ |x u| * (G.adjMatrix ℝ u v + p) * |y v| := by
             gcongr
-        _ = |x u| * adjMat G u v * |y v| + p * (|x u| * |y v|) := by ring
+        _ = |x u| * G.adjMatrix ℝ u v * |y v| + p * (|x u| * |y v|) := by ring
   · rw [ite_eq_right fun h => hh h.2, ite_eq_right hh, ite_eq_right hh, abs_zero, mul_zero,
       add_zero]
 
@@ -196,13 +209,20 @@ private theorem fo6Aux_tail (a : ℝ) :
 
 /-! ### The theorem -/
 
+open Classical in
 /-- **Feige–Ofek (2005)**: for all `c, a > 0` there is a constant `C` such that, whenever
-`pn ≥ c log n`, the adjacency matrix `A` of `G ∼ G(n, p)` satisfies `‖A − E A‖_op ≤ C √(pn)` with
-probability at least `1 − n^(−a)`. -/
-theorem feigeOfek {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
+`pn ≥ c log n`, the adjacency matrix `A` of the binomial random graph `G ∼ G(n, p)` on `Fin n`
+satisfies `‖A − E A‖ ≤ C √(pn)` with probability at least `1 − n^(−a)`. Here `G(n, p)` is
+Mathlib's `SimpleGraph.binomialRandom (Fin n)` (with `p` clamped into `[0, 1]`, which changes
+nothing for `0 < p ≤ 1`), `A` is `G.adjMatrix ℝ`, `E A` has `p` off the diagonal and `0` on it, and
+`‖·‖` is the operator norm on `ℓ²` (of `Matrix.toEuclideanCLM`). -/
+theorem opNorm_adjMatrix_sub_le {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
     ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 → c * Real.log n ≤ p * n →
       1 - (n : ℝ) ^ (-a) ≤
-        gnpProb n p (fun G => specNorm (adjMat G - meanAdj n p) ≤ C * Real.sqrt (p * n)) := by
+        (SimpleGraph.binomialRandom (Fin n) (Set.projIcc 0 1 zero_le_one p)).real
+          {G | ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+              (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤
+            C * Real.sqrt (p * n)} := by
   -- The constants: degrees and discrepancy with failure probability `n^(−a−1)`, the heavy-pair
   -- constant `K`, the threshold `N₀`, and `C = max (2 (22 + K)) (N₀ / √(c log 2))`.
   obtain ⟨c₁, c₂, c₃, hc₁, hc₂, hc₃, hprop⟩ :=
@@ -212,14 +232,22 @@ theorem feigeOfek {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
   obtain ⟨N₀, hN₀⟩ : ∃ N₀ : ℕ, N₀ = max N₁ 2 := ⟨_, rfl⟩
   obtain ⟨C₂, hC₂⟩ : ∃ C₂ : ℝ, C₂ = N₀ / Real.sqrt (c * Real.log 2) := ⟨_, rfl⟩
   refine ⟨max (2 * (22 + K)) C₂, fun n p hp0 hp1 hpn => ?_⟩
+  -- The probability of the event under `G(n, p)`, as `prob` (`Defs.lean`).
+  change 1 - (n : ℝ) ^ (-a) ≤
+    prob n p (fun G => ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+        (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤
+      max (2 * (22 + K)) C₂ * Real.sqrt (p * n))
   have hsure : (∀ G : SimpleGraph (Fin n),
-      specNorm (adjMat G - meanAdj n p) ≤ max (2 * (22 + K)) C₂ * Real.sqrt (p * n)) →
+      ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+          (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤
+        max (2 * (22 + K)) C₂ * Real.sqrt (p * n)) →
       1 - (n : ℝ) ^ (-a) ≤
-        gnpProb n p (fun G => specNorm (adjMat G - meanAdj n p) ≤
+        prob n p (fun G => ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+            (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤
           max (2 * (22 + K)) C₂ * Real.sqrt (p * n)) := by
     intro h
-    have h1 := gnpProb_mono (n := n) (p := p) (P := fun _ => True) (fun G _ => h G)
-    rw [gnpProb_true] at h1
+    have h1 := prob_mono (n := n) (p := p) (P := fun _ => True) (fun G _ => h G)
+    rw [prob_true] at h1
     have : 0 ≤ (n : ℝ) ^ (-a) := Real.rpow_nonneg (Nat.cast_nonneg n) _
     linarith
   rcases Nat.lt_or_ge n 2 with hn2 | hn2
@@ -227,10 +255,10 @@ theorem feigeOfek {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
     interval_cases n
     · apply hsure
       intro G
-      have h := fo6Aux_specNorm_le_card hp0.le hp1 G
-      simpa using h
+      have h := fo6Aux_opNorm_le_card hp0.le hp1 G
+      exact h.trans (by simp)
     · simp only [Nat.cast_one, Real.one_rpow, sub_self]
-      exact gnpProb_nonneg _
+      exact prob_nonneg _
   have hn2' : (2 : ℝ) ≤ n := by exact_mod_cast hn2
   have hnpos : (0 : ℝ) < n := by linarith
   rcases Nat.lt_or_ge n N₀ with hnN | hnN
@@ -244,7 +272,9 @@ theorem feigeOfek {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
     have h4 : (N₀ : ℝ) ≤ C₂ * Real.sqrt (p * n) := by
       rw [hC₂, div_mul_eq_mul_div, le_div_iff₀ hpos]
       exact mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt hlog2) (Nat.cast_nonneg _)
-    calc specNorm (adjMat G - meanAdj n p) ≤ n := fo6Aux_specNorm_le_card hp0.le hp1 G
+    calc ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+          (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖
+        ≤ n := fo6Aux_opNorm_le_card hp0.le hp1 G
       _ ≤ N₀ := by exact_mod_cast hnN.le
       _ ≤ C₂ * Real.sqrt (p * n) := h4
       _ ≤ max (2 * (22 + K)) C₂ * Real.sqrt (p * n) :=
@@ -260,11 +290,13 @@ theorem feigeOfek {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
       DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃ →
       (∀ x ∈ gridNet n, ∀ y ∈ gridNet n,
         |lightSum G p (p * n) x y| ≤ 21 * Real.sqrt (p * n)) →
-      specNorm (adjMat G - meanAdj n p) ≤ max (2 * (22 + K)) C₂ * Real.sqrt (p * n) := by
+      ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+          (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤
+        max (2 * (22 + K)) C₂ * Real.sqrt (p * n) := by
     rintro G ⟨hdeg, hdisc⟩ hlight
     have hbil : ∀ x ∈ gridNet n, ∀ y ∈ gridNet n,
-        |∑ u, ∑ v, x u * (adjMat G - meanAdj n p) u v * y v| ≤
-          (22 + K) * Real.sqrt (p * n) := by
+        |∑ i, ∑ j, x i * (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p :
+          Matrix (Fin n) (Fin n) ℝ) i j * y j| ≤ (22 + K) * Real.sqrt (p * n) := by
       intro x hx y hy
       have hx1 := sum_sq_le_one_of_mem_gridNet hx
       have hy1 := sum_sq_le_one_of_mem_gridNet hy
@@ -279,34 +311,36 @@ theorem feigeOfek {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
         (mul_le_mul_of_nonneg_left h4 hp0.le).trans h5.le
       rw [← hK] at h3
       calc _ ≤ |lightSum G p (p * n) x y| + |∑ u, ∑ v, if u ≠ v ∧
-              Real.sqrt (p * n) / n < |x u * y v| then x u * (adjMat G u v - p) * y v else 0| :=
+              Real.sqrt (p * n) / n < |x u * y v| then x u * (G.adjMatrix ℝ u v - p) * y v
+                else 0| :=
             abs_add_le _ _
         _ ≤ 21 * Real.sqrt (p * n) + (K * Real.sqrt (p * n) + Real.sqrt (p * n)) := by
             gcongr
             linarith
         _ = (22 + K) * Real.sqrt (p * n) := by ring
-    have hnorm := Matrix.norm_toEuclideanCLM_le_of_gridNet (adjMat G - meanAdj n p) hbil
-    unfold specNorm
+    have hnorm := Matrix.norm_toEuclideanCLM_le_of_gridNet
+      (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p) hbil
     calc _ ≤ 2 * ((22 + K) * Real.sqrt (p * n)) := hnorm
       _ = 2 * (22 + K) * Real.sqrt (p * n) := by ring
       _ ≤ max (2 * (22 + K)) C₂ * Real.sqrt (p * n) :=
           mul_le_mul_of_nonneg_right (le_max_left _ _) hsd.le
   -- The failure probability: `n^(−a−1) + 2e^(−n) ≤ n^(−a)`.
-  apply le_gnpProb_of_not_le
-  calc gnpProb n p (fun G => ¬ specNorm (adjMat G - meanAdj n p) ≤
+  apply le_prob_of_not_le
+  calc prob n p (fun G => ¬ ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+          (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖ ≤
         max (2 * (22 + K)) C₂ * Real.sqrt (p * n))
-      ≤ gnpProb n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃) ∨
+      ≤ prob n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃) ∨
           ∃ x ∈ gridNet n, ∃ y ∈ gridNet n,
             21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) := by
-        refine gnpProb_mono fun G hG => ?_
+        refine prob_mono fun G hG => ?_
         by_contra hcon
         rw [not_or, not_not] at hcon
         exact hG (hdet G hcon.1 fun x hx y hy => not_lt.mp fun h => hcon.2 ⟨x, hx, y, hy, h⟩)
-    _ ≤ gnpProb n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃)) +
-        gnpProb n p (fun G => ∃ x ∈ gridNet n, ∃ y ∈ gridNet n,
-          21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) := gnpProb_or_le _ _
+    _ ≤ prob n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃)) +
+        prob n p (fun G => ∃ x ∈ gridNet n, ∃ y ∈ gridNet n,
+          21 * Real.sqrt (p * n) < |lightSum G p (p * n) x y|) := prob_or_le _ _
     _ ≤ (n : ℝ) ^ (-(a + 1)) + 2 * Real.exp (-(n : ℝ)) :=
         add_le_add (hprop n p hn2 hp0 hp1 hpn) (lightSum_le (by omega) hp0 hp1)
     _ ≤ (n : ℝ) ^ (-a) := htail
 
-end PowerOfFew.FeigeOfek
+end External.FeigeOfek

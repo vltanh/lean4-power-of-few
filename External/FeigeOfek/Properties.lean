@@ -1,9 +1,7 @@
 module
 
-public import PowerOfFew.External.FeigeOfek.Defs
-public import PowerOfFew.Model.Gnp
+public import External.FeigeOfek.Defs
 public import Basic.Probability.Chernoff
-public import Basic.Combinatorics.Choose
 
 /-!
 # Bounded degrees and discrepancy of `G(n, p)`
@@ -27,15 +25,21 @@ The constants are `c₁ = e^(1 + (a + 2)/c)` (so that `c₁ ≥ e` and `c₁ c l
 `1 ≤ |S|, |T|` and `m ≤ n/e`; the least natural number `k*` that violates both satisfies
 `k*/μ > c₂ ≥ 4e²`, so `(2eμ/k*)^(k*/2) ≤ exp(−(k*/4) log(k*/μ))`; and `m log(n/m) ≥ log n`, so the
 union bound over the sizes gives `(n + 1)² n^(−(c₃/4 − 4)) ≤ n^(−(a + 1))`.
+
+The degrees and the edge counts are sums of the independent edge indicators of `G(n, p)`
+(`SimpleGraph.edgeInd` under `SimpleGraph.edgeLaw`), the entries of `G.adjMatrix ℝ` off the
+diagonal.
 -/
 
 @[expose] public section
 
 open MeasureTheory ProbabilityTheory
 
+open SimpleGraph (EdgeVars OffDiag graphOfEdges edgeInd adj_graphOfEdges isBernoulliFamily_edgeInd)
+
 noncomputable section
 
-namespace PowerOfFew.FeigeOfek
+namespace External.FeigeOfek
 
 /-! ### Elementary inequalities -/
 
@@ -130,12 +134,13 @@ private lemma fo4Aux_choose_mul_choose_le {n s t : ℕ} (hs : 1 ≤ s) (ht : 1 �
 
 /-! ### Edge counts as sums of edge indicators -/
 
+open Classical in
 /-- The entries of the adjacency matrix of `graphOfEdges ω` are edge indicators. -/
-private lemma fo4Aux_adjMat_graphOfEdges {n : ℕ} (ω : EdgeVars n) (u v : Fin n) :
-    adjMat (graphOfEdges ω) u v =
+private lemma fo4Aux_adjMatrix_graphOfEdges {n : ℕ} (ω : EdgeVars n) (u v : Fin n) :
+    (graphOfEdges ω).adjMatrix ℝ u v =
       if ¬ (s(u, v) : Sym2 (Fin n)).IsDiag then edgeInd s(u, v) ω else 0 := by
   classical
-  simp only [adjMat, Matrix.of_apply, edgeInd, Sym2.mk_isDiag_iff, adj_graphOfEdges]
+  simp only [SimpleGraph.adjMatrix_apply, edgeInd, Sym2.mk_isDiag_iff, adj_graphOfEdges]
   split_ifs <;> simp_all
 
 /-- A sum of edge indicators over the off-diagonal pairs of a set of unordered pairs. -/
@@ -144,10 +149,11 @@ private lemma fo4Aux_sum_subtype {n : ℕ} (s : Finset (Sym2 (Fin n))) (ω : Edg
       ∑ z ∈ s, if ¬ z.IsDiag then edgeInd z ω else 0 := by
   rw [Finset.sum_subtype_eq_sum_filter (f := fun z => edgeInd z ω), Finset.sum_filter]
 
+open Classical in
 /-- The degree of `u` in `graphOfEdges ω` is a sum of at most `n` edge indicators. -/
 private lemma fo4Aux_exists_degree {n : ℕ} (u : Fin n) :
     ∃ P : Finset (OffDiag n), (P.card : ℝ) ≤ n ∧
-      ∀ ω : EdgeVars n, ∑ v, adjMat (graphOfEdges ω) u v = ∑ z ∈ P, edgeInd z.1 ω := by
+      ∀ ω : EdgeVars n, ∑ v, (graphOfEdges ω).adjMatrix ℝ u v = ∑ z ∈ P, edgeInd z.1 ω := by
   classical
   refine ⟨((Finset.univ : Finset (Fin n)).image (fun v => s(u, v))).subtype
     (fun z => ¬ z.IsDiag), ?_, fun ω => ?_⟩
@@ -158,7 +164,7 @@ private lemma fo4Aux_exists_degree {n : ℕ} (u : Fin n) :
     rw [Finset.card_univ, Fintype.card_fin] at h2
     exact_mod_cast h1.trans h2
   · rw [fo4Aux_sum_subtype, Finset.sum_image (fun v _ w _ h => Sym2.congr_right.1 h)]
-    exact Finset.sum_congr rfl fun v _ => fo4Aux_adjMat_graphOfEdges ω u v
+    exact Finset.sum_congr rfl fun v _ => fo4Aux_adjMatrix_graphOfEdges ω u v
 
 /-- `e(S, T)` in `graphOfEdges ω` is at most twice a sum of at most `|S| |T|` edge indicators:
 the pairs with one end in `S` and the other in `T`. -/
@@ -182,7 +188,7 @@ private lemma fo4Aux_exists_pairs {n : ℕ} (S T : Finset (Fin n)) :
     calc edgeCount (graphOfEdges ω) S T = ∑ x ∈ S ×ˢ T, F (g x) := by
           rw [edgeCount, Finset.sum_product]
           exact Finset.sum_congr rfl fun u _ => Finset.sum_congr rfl fun v _ =>
-            fo4Aux_adjMat_graphOfEdges ω u v
+            fo4Aux_adjMatrix_graphOfEdges ω u v
       _ = ∑ z ∈ (S ×ˢ T).image g, (Finset.filter (fun x => g x = z) (S ×ˢ T)).card • F z :=
           Finset.sum_comp F g
       _ ≤ ∑ z ∈ (S ×ˢ T).image g, 2 * F z := by
@@ -206,64 +212,69 @@ private lemma fo4Aux_edgeCount_natCast {n : ℕ} (G : SimpleGraph (Fin n)) (S T 
     ∃ N : ℕ, edgeCount G S T = N := by
   classical
   refine ⟨∑ u ∈ S, ∑ v ∈ T, if G.Adj u v then 1 else 0, ?_⟩
-  simp [edgeCount, adjMat]
+  simp [edgeCount]
 
+open Classical in
 /-- The entries of an adjacency matrix are nonnegative. -/
-private lemma fo4Aux_adjMat_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
-    0 ≤ adjMat G u v := by
+private lemma fo4Aux_adjMatrix_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
+    0 ≤ G.adjMatrix ℝ u v := by
   classical
-  simp only [adjMat, Matrix.of_apply]
+  simp only [SimpleGraph.adjMatrix_apply]
   split_ifs <;> norm_num
 
+open Classical in
 /-- An adjacency matrix is symmetric. -/
-private lemma fo4Aux_adjMat_comm {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
-    adjMat G u v = adjMat G v u := by
+private lemma fo4Aux_adjMatrix_comm {n : ℕ} (G : SimpleGraph (Fin n)) (u v : Fin n) :
+    G.adjMatrix ℝ u v = G.adjMatrix ℝ v u := by
   classical
-  simp only [adjMat, Matrix.of_apply, G.adj_comm]
+  simp only [SimpleGraph.adjMatrix_apply, G.adj_comm]
 
 /-- `e(S, T) = e(T, S)`. -/
 private lemma fo4Aux_edgeCount_comm {n : ℕ} (G : SimpleGraph (Fin n)) (S T : Finset (Fin n)) :
     edgeCount G S T = edgeCount G T S := by
-  calc edgeCount G S T = ∑ v ∈ T, ∑ u ∈ S, adjMat G u v := Finset.sum_comm
+  classical
+  calc edgeCount G S T = ∑ v ∈ T, ∑ u ∈ S, G.adjMatrix ℝ u v := Finset.sum_comm
     _ = edgeCount G T S :=
-        Finset.sum_congr rfl fun v _ => Finset.sum_congr rfl fun u _ => fo4Aux_adjMat_comm G u v
+        Finset.sum_congr rfl fun v _ => Finset.sum_congr rfl fun u _ => fo4Aux_adjMatrix_comm G u v
 
 /-- Bounded degrees bound `e(S, T)` by `c₁ d |S|`. -/
 private lemma fo4Aux_edgeCount_le_left {n : ℕ} {G : SimpleGraph (Fin n)} {d c₁ : ℝ}
     (h : DegreeBound G d c₁) (S T : Finset (Fin n)) :
     edgeCount G S T ≤ c₁ * d * S.card := by
-  calc edgeCount G S T = ∑ u ∈ S, ∑ v ∈ T, adjMat G u v := rfl
-    _ ≤ ∑ u ∈ S, ∑ v, adjMat G u v :=
+  classical
+  calc edgeCount G S T = ∑ u ∈ S, ∑ v ∈ T, G.adjMatrix ℝ u v := rfl
+    _ ≤ ∑ u ∈ S, ∑ v, G.adjMatrix ℝ u v :=
         Finset.sum_le_sum fun u _ => Finset.sum_le_sum_of_subset_of_nonneg
-          (Finset.subset_univ T) fun v _ _ => fo4Aux_adjMat_nonneg G u v
+          (Finset.subset_univ T) fun v _ _ => fo4Aux_adjMatrix_nonneg G u v
     _ ≤ ∑ u ∈ S, c₁ * d := Finset.sum_le_sum fun u _ => h u
     _ = c₁ * d * S.card := by rw [Finset.sum_const, nsmul_eq_mul]; ring
 
 /-! ### The probability bounds -/
 
 /-- An event that never happens has probability `0`. -/
-private lemma fo4Aux_gnpProb_eq_zero {n : ℕ} {p : ℝ} {P : SimpleGraph (Fin n) → Prop}
-    (h : ∀ G, ¬ P G) : gnpProb n p P = 0 := by
+private lemma fo4Aux_prob_eq_zero {n : ℕ} {p : ℝ} {P : SimpleGraph (Fin n) → Prop}
+    (h : ∀ G, ¬ P G) : prob n p P = 0 := by
   have : {G : SimpleGraph (Fin n) | P G} = ∅ := Set.eq_empty_of_forall_notMem fun G hG => h G hG
-  rw [gnpProb, this, measureReal_empty]
+  rw [prob, this, measureReal_empty]
 
+open Classical in
 /-- **Degrees.** A vertex has more than `c₁ pn` neighbours with probability at most
 `n^(−(a + 2))`: its degree is a sum of at most `n` edge indicators, so the sharp Chernoff bound
 gives `(e / c₁)^(c₁ pn) ≤ n^(−c₁ c log(c₁/e)) ≤ n^(−(a + 2))`. -/
 private lemma fo4Aux_prob_degree_gt_le {n : ℕ} {p c c₁ a : ℝ} (hn : 2 ≤ n) (hp0 : 0 < p)
     (hp1 : p ≤ 1) (hcp : c * Real.log n ≤ p * n) (hc₁e : Real.exp 1 ≤ c₁)
     (hc₁ : a + 2 ≤ c₁ * c * Real.log (c₁ / Real.exp 1)) (u : Fin n) :
-    gnpProb n p (fun G => c₁ * (p * n) < ∑ v, adjMat G u v) ≤ (n : ℝ) ^ (-(a + 2)) := by
+    prob n p (fun G => c₁ * (p * n) < ∑ v, G.adjMatrix ℝ u v) ≤ (n : ℝ) ^ (-(a + 2)) := by
   obtain ⟨P, hPcard, hPsum⟩ := fo4Aux_exists_degree u
   have hn' : (0 : ℝ) < n := by positivity
   have he : 0 < Real.exp 1 := Real.exp_pos 1
   have hc₁0 : 0 < c₁ := he.trans_le hc₁e
   have hd : 0 < c₁ * (p * n) := by positivity
-  rw [gnpProb_eq]
-  have hsub : {ω : EdgeVars n | c₁ * (p * n) < ∑ v, adjMat (graphOfEdges ω) u v} ⊆
+  rw [prob_eq]
+  have hsub : {ω : EdgeVars n | c₁ * (p * n) < ∑ v, (graphOfEdges ω).adjMatrix ℝ u v} ⊆
       {ω | c₁ * (p * n) ≤ ∑ z ∈ P, edgeInd z.1 ω} := by
     intro ω hω
-    have h : c₁ * (p * n) < ∑ v, adjMat (graphOfEdges ω) u v := hω
+    have h : c₁ * (p * n) < ∑ v, (graphOfEdges ω).adjMatrix ℝ u v := hω
     show c₁ * (p * n) ≤ ∑ z ∈ P, edgeInd z.1 ω
     rw [← hPsum ω]
     exact h.le
@@ -306,18 +317,19 @@ private lemma fo4Aux_prob_degree_gt_le {n : ℕ} {p c c₁ a : ℝ} (hn : 2 ≤ 
 private lemma fo4Aux_prob_not_degreeBound {n : ℕ} {p c c₁ a : ℝ} (hn : 2 ≤ n) (hp0 : 0 < p)
     (hp1 : p ≤ 1) (hcp : c * Real.log n ≤ p * n) (hc₁e : Real.exp 1 ≤ c₁)
     (hc₁ : a + 2 ≤ c₁ * c * Real.log (c₁ / Real.exp 1)) :
-    gnpProb n p (fun G => ¬ DegreeBound G (p * n) c₁) ≤ (n : ℝ) ^ (-(a + 1)) := by
+    prob n p (fun G => ¬ DegreeBound G (p * n) c₁) ≤ (n : ℝ) ^ (-(a + 1)) := by
+  classical
   have hn' : (0 : ℝ) < n := by positivity
-  calc gnpProb n p (fun G => ¬ DegreeBound G (p * n) c₁)
-      ≤ gnpProb n p (fun G => ∃ u ∈ (Finset.univ : Finset (Fin n)),
-          c₁ * (p * n) < ∑ v, adjMat G u v) := by
-        refine gnpProb_mono fun G hG => ?_
+  calc prob n p (fun G => ¬ DegreeBound G (p * n) c₁)
+      ≤ prob n p (fun G => ∃ u ∈ (Finset.univ : Finset (Fin n)),
+          c₁ * (p * n) < ∑ v, G.adjMatrix ℝ u v) := by
+        refine prob_mono fun G hG => ?_
         unfold DegreeBound at hG
         push Not at hG
         obtain ⟨u, hu⟩ := hG
         exact ⟨u, Finset.mem_univ u, hu⟩
     _ ≤ ∑ u ∈ (Finset.univ : Finset (Fin n)),
-          gnpProb n p (fun G => c₁ * (p * n) < ∑ v, adjMat G u v) := gnpProb_exists_le _ _
+          prob n p (fun G => c₁ * (p * n) < ∑ v, G.adjMatrix ℝ u v) := prob_exists_le _ _
     _ ≤ ∑ u ∈ (Finset.univ : Finset (Fin n)), (n : ℝ) ^ (-(a + 2)) :=
         Finset.sum_le_sum fun u _ => fo4Aux_prob_degree_gt_le hn hp0 hp1 hcp hc₁e hc₁ u
     _ = (n : ℝ) ^ (-(a + 1)) := by
@@ -332,7 +344,7 @@ at least `k*/2`, and `P(Z ≥ k*/2) ≤ (2eμ/k*)^(k*/2) ≤ exp(−(k*/4) log(k
 private lemma fo4Aux_prob_bad_le {n : ℕ} {p c₂ c₃ : ℝ} (hn : 1 ≤ n) (hp0 : 0 < p) (hp1 : p ≤ 1)
     (hc₂ : 4 * Real.exp 1 ^ 2 ≤ c₂) (S T : Finset (Fin n)) (hS : 1 ≤ S.card)
     (hT : 1 ≤ T.card) :
-    gnpProb n p (fun G => c₂ * (S.card * T.card * (p * n) / n) < edgeCount G S T ∧
+    prob n p (fun G => c₂ * (S.card * T.card * (p * n) / n) < edgeCount G S T ∧
         c₃ * max (S.card : ℝ) T.card * Real.log (n / max (S.card : ℝ) T.card) <
           edgeCount G S T * Real.log (edgeCount G S T / (S.card * T.card * (p * n) / n))) ≤
       Real.exp (-(c₃ * max (S.card : ℝ) T.card * Real.log (n / max (S.card : ℝ) T.card) / 4)) := by
@@ -355,7 +367,7 @@ private lemma fo4Aux_prob_bad_le {n : ℕ} {p c₂ c₃ : ℝ} (hn : 1 ≤ n) (h
     set k : ℕ := Nat.find hex
     have hc₂0 : 0 ≤ c₂ := le_trans (by positivity) hc₂
     have hkpos : (0 : ℝ) < k := lt_of_le_of_lt (by positivity) hk1
-    rw [gnpProb_eq]
+    rw [prob_eq]
     have hsub : {ω : EdgeVars n | c₂ * μ < edgeCount (graphOfEdges ω) S T ∧
         L < edgeCount (graphOfEdges ω) S T * Real.log (edgeCount (graphOfEdges ω) S T / μ)} ⊆
         {ω | (k : ℝ) / 2 ≤ ∑ z ∈ P, edgeInd z.1 ω} := by
@@ -422,7 +434,7 @@ private lemma fo4Aux_prob_bad_le {n : ℕ} {p c₂ c₃ : ℝ} (hn : 1 ≤ n) (h
       obtain ⟨N, hN⟩ := fo4Aux_edgeCount_natCast G S T
       rw [hN] at h1 h2
       exact hex ⟨N, h1, h2⟩
-    rw [fo4Aux_gnpProb_eq_zero hnot]
+    rw [fo4Aux_prob_eq_zero hnot]
     positivity
 
 /-- The union bound weight of the pairs of sets of sizes `s, t`: `exp(−(c₃/4) m log(n/m))` with
@@ -470,7 +482,7 @@ are bounded but the discrepancy property fails has probability at most `n^(−(a
 private lemma fo4Aux_prob_not_discrepancy {n : ℕ} {p c₁ c₂ a : ℝ} (hn : 2 ≤ n) (hp0 : 0 < p)
     (hp1 : p ≤ 1) (ha : 0 < a) (hc₁ : 0 ≤ c₁) (hc₂ : 4 * Real.exp 1 ^ 2 ≤ c₂)
     (hc₂' : Real.exp 1 * c₁ ≤ c₂) :
-    gnpProb n p (fun G => DegreeBound G (p * n) c₁ ∧ ¬ Discrepancy G (p * n) c₂ (4 * (a + 9))) ≤
+    prob n p (fun G => DegreeBound G (p * n) c₁ ∧ ¬ Discrepancy G (p * n) c₂ (4 * (a + 9))) ≤
       (n : ℝ) ^ (-(a + 1)) := by
   classical
   have hn' : (0 : ℝ) < n := by positivity
@@ -520,25 +532,25 @@ private lemma fo4Aux_prob_not_discrepancy {n : ℕ} {p c₁ c₂ a : ℝ} (hn : 
           mul_le_mul_of_nonneg_left hm.le (by positivity)
         nlinarith
   -- (2) the bound for one pair of sets
-  have hE : ∀ S T : Finset (Fin n), gnpProb n p (E S T) ≤ fo4Aux_weight n c₃ S.card T.card := by
+  have hE : ∀ S T : Finset (Fin n), prob n p (E S T) ≤ fo4Aux_weight n c₃ S.card T.card := by
     intro S T
     unfold fo4Aux_weight
     by_cases h : 1 ≤ S.card ∧ 1 ≤ T.card ∧ Real.exp 1 * max (S.card : ℝ) T.card ≤ n
     · rw [ite_eq_left h]
-      refine le_trans (gnpProb_mono fun G hG => hG.2) ?_
+      refine le_trans (prob_mono fun G hG => hG.2) ?_
       exact fo4Aux_prob_bad_le (by omega) hp0 hp1 hc₂ S T h.1 h.2.1
-    · rw [ite_eq_right h, fo4Aux_gnpProb_eq_zero fun G hG => h hG.1]
+    · rw [ite_eq_right h, fo4Aux_prob_eq_zero fun G hG => h hG.1]
   -- (3) the union bound, grouped by the sizes of the sets
   have hcard : (Finset.univ : Finset (Fin n)).card = n := by simp
   have hgroup : ∀ f : ℕ → ℝ, ∑ S ∈ U, f S.card =
       ∑ s ∈ Finset.range (n + 1), n.choose s • f s := by
     intro f
     rw [hU, Finset.sum_powerset_apply_card, hcard]
-  calc gnpProb n p (fun G => DegreeBound G (p * n) c₁ ∧ ¬ Discrepancy G (p * n) c₂ c₃)
-      ≤ gnpProb n p (fun G => ∃ S ∈ U, ∃ T ∈ U, E S T G) := gnpProb_mono hsub
-    _ ≤ ∑ S ∈ U, gnpProb n p (fun G => ∃ T ∈ U, E S T G) := gnpProb_exists_le _ _
-    _ ≤ ∑ S ∈ U, ∑ T ∈ U, gnpProb n p (E S T) :=
-        Finset.sum_le_sum fun S _ => gnpProb_exists_le _ _
+  calc prob n p (fun G => DegreeBound G (p * n) c₁ ∧ ¬ Discrepancy G (p * n) c₂ c₃)
+      ≤ prob n p (fun G => ∃ S ∈ U, ∃ T ∈ U, E S T G) := prob_mono hsub
+    _ ≤ ∑ S ∈ U, prob n p (fun G => ∃ T ∈ U, E S T G) := prob_exists_le _ _
+    _ ≤ ∑ S ∈ U, ∑ T ∈ U, prob n p (E S T) :=
+        Finset.sum_le_sum fun S _ => prob_exists_le _ _
     _ ≤ ∑ S ∈ U, ∑ T ∈ U, fo4Aux_weight n c₃ S.card T.card :=
         Finset.sum_le_sum fun S _ => Finset.sum_le_sum fun T _ => hE S T
     _ = ∑ s ∈ Finset.range (n + 1),
@@ -577,7 +589,7 @@ constants `c₂, c₃` and expected degree `pn`. -/
 theorem exists_degreeBound_discrepancy {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
     ∃ c₁ c₂ c₃ : ℝ, 0 ≤ c₁ ∧ Real.exp 1 ≤ c₂ ∧ 0 ≤ c₃ ∧
       ∀ (n : ℕ) (p : ℝ), 2 ≤ n → 0 < p → p ≤ 1 → c * Real.log n ≤ p * n →
-        gnpProb n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃)) ≤
+        prob n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧ Discrepancy G (p * n) c₂ c₃)) ≤
           (n : ℝ) ^ (-a) := by
   set c₁ : ℝ := Real.exp (1 + (a + 2) / c) with hc₁_def
   have he : 0 < Real.exp 1 := Real.exp_pos 1
@@ -597,15 +609,15 @@ theorem exists_degreeBound_discrepancy {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
     nlinarith
   intro n p hn hp0 hp1 hcp
   have hn' : (0 : ℝ) < n := by positivity
-  calc gnpProb n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧
+  calc prob n p (fun G => ¬ (DegreeBound G (p * n) c₁ ∧
           Discrepancy G (p * n) (max (4 * Real.exp 1 ^ 2) (Real.exp 1 * c₁)) (4 * (a + 9))))
-      ≤ gnpProb n p (fun G => ¬ DegreeBound G (p * n) c₁ ∨ (DegreeBound G (p * n) c₁ ∧
+      ≤ prob n p (fun G => ¬ DegreeBound G (p * n) c₁ ∨ (DegreeBound G (p * n) c₁ ∧
           ¬ Discrepancy G (p * n) (max (4 * Real.exp 1 ^ 2) (Real.exp 1 * c₁)) (4 * (a + 9)))) :=
-        gnpProb_mono fun G hG => by tauto
-    _ ≤ gnpProb n p (fun G => ¬ DegreeBound G (p * n) c₁) +
-          gnpProb n p (fun G => DegreeBound G (p * n) c₁ ∧
+        prob_mono fun G hG => by tauto
+    _ ≤ prob n p (fun G => ¬ DegreeBound G (p * n) c₁) +
+          prob n p (fun G => DegreeBound G (p * n) c₁ ∧
             ¬ Discrepancy G (p * n) (max (4 * Real.exp 1 ^ 2) (Real.exp 1 * c₁)) (4 * (a + 9))) :=
-        gnpProb_or_le _ _
+        prob_or_le _ _
     _ ≤ (n : ℝ) ^ (-(a + 1)) + (n : ℝ) ^ (-(a + 1)) :=
         add_le_add (fo4Aux_prob_not_degreeBound hn hp0 hp1 hcp hc₁e hc₁)
           (fo4Aux_prob_not_discrepancy hn hp0 hp1 ha (by positivity) (le_max_left _ _)
@@ -620,4 +632,4 @@ theorem exists_degreeBound_discrepancy {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
         have h5 : (n : ℝ) ^ (-a) * 2 ≤ (n : ℝ) ^ (-a) * n := mul_le_mul_of_nonneg_left h2 h4.le
         linarith
 
-end PowerOfFew.FeigeOfek
+end External.FeigeOfek

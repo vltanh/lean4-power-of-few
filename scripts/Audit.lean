@@ -16,6 +16,12 @@ import all Basic.Probability.Concentration
 import all Basic.Probability.WeightedBernoulli
 import all External.BenaychGeorgesBordenaveKnowles.Theorem3_2
 import all External.BoucheronLugosiMassart.Theorem6_10
+import all External.FeigeOfek.Defs
+import all External.FeigeOfek.FeigeOfek
+import all External.FeigeOfek.Heavy
+import all External.FeigeOfek.Light
+import all External.FeigeOfek.Properties
+import all External.FeigeOfek.SixCases
 import all External.GolesOlivos.GolesOlivos
 import all PowerOfFew.Defs
 import all PowerOfFew.Dense.Appendix
@@ -23,12 +29,6 @@ import all PowerOfFew.Dense.BinomialDifference
 import all PowerOfFew.Dense.DayOne
 import all PowerOfFew.Dense.Main
 import all PowerOfFew.Dense.Shrinking
-import all PowerOfFew.External.FeigeOfek.Defs
-import all PowerOfFew.External.FeigeOfek.FeigeOfek
-import all PowerOfFew.External.FeigeOfek.Heavy
-import all PowerOfFew.External.FeigeOfek.Light
-import all PowerOfFew.External.FeigeOfek.Properties
-import all PowerOfFew.External.FeigeOfek.SixCases
 import all PowerOfFew.Model.BerryEsseen
 import all PowerOfFew.Model.EdgeConditioning
 import all PowerOfFew.Model.Gnp
@@ -96,7 +96,7 @@ hypotheses. The traversal
 stops at them. -/
 meta def externalResults : List (String × Name) :=
   [("Berry–Esseen, Shevtsova 2010 (assumed)", ``PowerOfFew.ShevtsovaBerryEsseen),
-   ("Feige–Ofek 2005", ``PowerOfFew.FeigeOfek.feigeOfek),
+   ("Feige–Ofek 2005", ``External.FeigeOfek.opNorm_adjMatrix_sub_le),
    ("Benaych-Georges–Bordenave–Knowles Thm 3.2 (not assumed)", ``External.BenaychGeorgesBordenaveKnowles.theorem3_2),
    ("Boucheron–Lugosi–Massart Thm 6.10 (not assumed)", ``External.BoucheronLugosiMassart.theorem6_10),
    ("Hoeffding (upper tail)", ``ProbabilityTheory.measureReal_sum_ge_add_le_exp),
