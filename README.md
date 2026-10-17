@@ -111,8 +111,8 @@ the TeX sources by a second reader.
   reviewed by an independent agent; proofs by parallel sub-agents, each comparing its proof with the
   paper; independent reviews of the proofs, of the findings and of the literature.
 - No person has reviewed the proofs.
-- Made on 2026-10-17, with 32 sub-agents. [CREDITS.md](CREDITS.md) has the procedure, the agents and
-  the figures.
+- Made on 2026-10-17 in 5.6 hours, with 34 sub-agents (at most 17 at once).
+  [CREDITS.md](CREDITS.md) has the procedure, the agents and the figures.
 
 ## Related work
 
