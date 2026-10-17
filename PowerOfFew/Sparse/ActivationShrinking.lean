@@ -128,7 +128,7 @@ private lemma lazyShrinkAux_isBernoulliFamily_infinitePi {q : ℝ} (hq0 : 0 ≤ 
 /-- The upper tail of a sum of `#s` Bernoulli(`q`) variables, as a sum of binomial weights: its
 law is `Bin(#s, q)` whatever the family. -/
 private lemma lazyShrinkAux_measureReal_le_sum {Ω ι : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    [IsProbabilityMeasure μ] {q : ℝ} (hq0 : 0 ≤ q) (hq1 : q ≤ 1) {X : ι → Ω → ℝ}
+    [IsProbabilityMeasure μ] {q : ℝ} {X : ι → Ω → ℝ}
     (hX : IsBernoulliFamily μ q X) (s : Finset ι) (x : ℝ) :
     μ.real {ω | x ≤ ∑ i ∈ s, X i ω} =
       ∑ k ∈ (Finset.range (s.card + 1)).filter (fun k : ℕ => x ≤ (k : ℝ)),
@@ -177,8 +177,8 @@ private lemma lazyShrinkAux_upper_tail {Ω ι : Type*} [MeasurableSpace Ω] {μ 
   · set μ' := Measure.infinitePi fun _ : ℕ => bernoulliMeasure true false (toUnit q)
     have hξ := lazyShrinkAux_isBernoulliFamily_infinitePi hq0.le hq1.le
     have key := lemmaA_6 (μ := μ') hq0 hq1 hm (Y := fun _ => s.card) (fun _ => hsm) hξ ht
-    rw [lazyShrinkAux_measureReal_le_sum hq0.le hq1.le hX,
-      ← Finset.card_range s.card, ← lazyShrinkAux_measureReal_le_sum hq0.le hq1.le hξ]
+    rw [lazyShrinkAux_measureReal_le_sum hX,
+      ← Finset.card_range s.card, ← lazyShrinkAux_measureReal_le_sum hξ]
     exact key
   · have hempty : {ω | 1 * m + t ≤ ∑ i ∈ s, X i ω} = ∅ := by
       ext ω

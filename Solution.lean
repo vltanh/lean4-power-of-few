@@ -51,6 +51,9 @@ open MeasureTheory ProbabilityTheory Filter Topology PowerOfFew
 
 namespace Challenge
 
+-- The Challenge keeps the paper's hypothesis `0 < c`, which the library's proof does not need (it
+-- follows from `F(n, p, c) > 0`).
+set_option linter.unusedVariables false in
 /-- Dense paper, **Theorem 1.6**. -/
 theorem dense_theorem1_6 (hBE : ShevtsovaBerryEsseen) {n c : ℕ} {p : ℝ} (hp0 : 0 < p)
     (hp1 : p < 1) (hn : 0 < n) (hc : 0 < c) (hF : 0 < denseF n p c) {B₀ : Set (Fin n)}

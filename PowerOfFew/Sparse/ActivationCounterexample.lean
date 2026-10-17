@@ -267,7 +267,7 @@ private lemma lazyCexAux_sum_eq_card {Ω ι : Type*} [MeasurableSpace Ω] {μ : 
 /-- The upper tail of a binomial variable as a sum of point probabilities. -/
 private lemma lazyCexAux_measureReal_ge_eq_sum {Ω ι : Type*} [MeasurableSpace Ω]
     {μ : Measure Ω} [IsProbabilityMeasure μ] {p : ℝ} {X : ι → Ω → ℝ}
-    (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) (s : Finset ι) (k : ℕ) :
+    (hX : IsBernoulliFamily μ p X) (s : Finset ι) (k : ℕ) :
     μ.real {ω | (k : ℝ) ≤ ∑ i ∈ s, X i ω} =
       ∑ j ∈ Finset.Icc k s.card, (s.card.choose j : ℝ) * p ^ j * (1 - p) ^ (s.card - j) := by
   classical
@@ -373,7 +373,7 @@ private lemma lazyCexAux_measureReal_ge_le {Ω : Type*} [MeasurableSpace Ω] {μ
     [IsProbabilityMeasure μ] {m : ℕ} {Y : Fin m → Ω → ℝ} (hY : IsBernoulliFamily μ (1 / 2) Y)
     (hm : 1 ≤ m) (k : ℕ) (hk : 2 * k ≤ m + 1) :
     μ.real {ω | (k : ℝ) ≤ ∑ i, Y i ω} ≤ 1 / 2 + ((m : ℝ) + 1 - 2 * k) / (2 * Real.sqrt m) := by
-  rw [lazyCexAux_measureReal_ge_eq_sum hY (by norm_num) (by norm_num) Finset.univ k]
+  rw [lazyCexAux_measureReal_ge_eq_sum hY Finset.univ k]
   simp only [Finset.card_univ, Fintype.card_fin]
   have h1 : ∀ j ∈ Finset.Icc k m, (m.choose j : ℝ) * (1 / 2) ^ j * (1 - 1 / 2) ^ (m - j) =
       (m.choose j : ℝ) / 2 ^ m := by
