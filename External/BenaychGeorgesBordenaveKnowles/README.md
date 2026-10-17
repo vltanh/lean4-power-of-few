@@ -1,8 +1,13 @@
-# The spectral norm of `A − E A` (assumed)
+# The spectral norm of `A − E A`: the paper's cited results
 
-The sparse paper's Lemma A.7 (`PowerOfFew.Sparse.lemmaA_7`) bounds `‖A − E A‖_op` for the adjacency
-matrix `A` of `G(n, p)` with `pn ≥ c log n`. Its proof combines two cited results, which the
-formalization assumes; the derivation of Lemma A.7 from them is proved.
+The sparse paper's Lemma A.7 bounds `‖A − E A‖_op` for the adjacency matrix `A` of `G(n, p)` with
+`pn ≥ c log n`. Its proof combines two cited results. Both are stated in
+[`RandomMatrix.lean`](RandomMatrix.lean), and the paper's derivation of Lemma A.7 from them is
+formalized as `PowerOfFew.Sparse.lemmaA_7_of_bbk_blm`, with the two results as hypotheses.
+
+The library proves Lemma A.7 itself (`PowerOfFew.Sparse.lemmaA_7`) by Feige and Ofek's argument
+instead ([`../FeigeOfek/`](../FeigeOfek/README.md)), at the author's request: no result of the
+library, and no statement of the Challenge, assumes the two results below.
 
 ## Benaych-Georges, Bordenave, Knowles, Theorem 3.2
 
@@ -32,5 +37,5 @@ of the upper-triangular entries, which gives `e^(−t²/4)` for `‖A − E A‖
 Mathlib has the operator norm of matrices but no moment method for random matrices (BBK's proof
 estimates `E tr Bˡ B*ˡ` for the non-backtracking matrix `B` and uses an Ihara–Bass type formula)
 and no Talagrand-type concentration inequality (BLM's proof uses the entropy method and
-logarithmic Sobolev inequalities). A combinatorial alternative for `pn ≥ c log n` (Feige–Ofek,
-2005: an ε-net argument with light and heavy pairs) would be a large but feasible project.
+logarithmic Sobolev inequalities). Feige and Ofek's argument needs neither: only Chernoff bounds,
+union bounds and a net of the unit ball.

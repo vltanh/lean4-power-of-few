@@ -1,7 +1,7 @@
 name = "PowerOfFew"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["Basic", "PowerOfFew", "Challenge", "Solution"]
+defaultTargets = ["Basic", "External", "PowerOfFew", "Challenge", "Solution"]
 
 [leanOptions]
 pp.unicode.fun = true
@@ -15,11 +15,15 @@ rev = "v4.36.0-rc1"
 
 [[lean_lib]]
 name = "Basic"
-globs = ["Basic.+"]
+globs = ["Basic.+"]           # general mathematics: imports only Mathlib
+
+[[lean_lib]]
+name = "External"
+globs = ["External.+"]        # the results of other works: imports only Mathlib and Basic
 
 [[lean_lib]]
 name = "PowerOfFew"
-globs = ["PowerOfFew.+"]
+globs = ["PowerOfFew.+"]      # the two papers' results
 
 [[lean_lib]]
 name = "Challenge"

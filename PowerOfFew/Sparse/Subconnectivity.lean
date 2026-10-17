@@ -1,7 +1,7 @@
 module
 
 public import PowerOfFew.Sparse.Main
-public import PowerOfFew.External.GolesOlivos.GolesOlivos
+public import PowerOfFew.Model.Majority
 
 /-!
 # Sparse paper, Section 3: below the connectivity threshold

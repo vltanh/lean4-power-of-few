@@ -4,15 +4,19 @@ public meta import Lean.Elab.Command
 public meta import Lean.DocString
 -- One `import all` line per module of the libraries, so that proofs are visible to the dependency
 -- traversal (the module system hides them from a plain `import`). Generate the lines with
---   find PowerOfFew Basic -name '*.lean' | sort | sed 's/\.lean$//; s#/#.#g; s/^/import all /'
+--   find PowerOfFew External Basic -name '*.lean' | sort | sed 's/\.lean$//; s#/#.#g; s/^/import all /'
 import all Basic.Analysis.GridNet
 import all Basic.Analysis.SpecialFunctions.CubeRoot
 import all Basic.Analysis.SpecialFunctions.ExpLog
 import all Basic.Combinatorics.Choose
 import all Basic.Probability.BernoulliFamily
 import all Basic.Probability.Chernoff
+import all Basic.Probability.Combinatorics.BinomialRandomGraph.EdgeVariables
 import all Basic.Probability.Concentration
 import all Basic.Probability.WeightedBernoulli
+import all External.BenaychGeorgesBordenaveKnowles.Theorem3_2
+import all External.BoucheronLugosiMassart.Theorem6_10
+import all External.GolesOlivos.GolesOlivos
 import all PowerOfFew.Defs
 import all PowerOfFew.Dense.Appendix
 import all PowerOfFew.Dense.BinomialDifference
@@ -25,8 +29,6 @@ import all PowerOfFew.External.FeigeOfek.Heavy
 import all PowerOfFew.External.FeigeOfek.Light
 import all PowerOfFew.External.FeigeOfek.Properties
 import all PowerOfFew.External.FeigeOfek.SixCases
-import all PowerOfFew.External.GolesOlivos.GolesOlivos
-import all PowerOfFew.External.RandomMatrix.RandomMatrix
 import all PowerOfFew.Model.BerryEsseen
 import all PowerOfFew.Model.EdgeConditioning
 import all PowerOfFew.Model.Gnp
@@ -47,6 +49,7 @@ import all PowerOfFew.Sparse.DayTwo
 import all PowerOfFew.Sparse.Degrees
 import all PowerOfFew.Sparse.Main
 import all PowerOfFew.Sparse.MatrixNorm
+import all PowerOfFew.Sparse.MatrixNormDerivation
 import all PowerOfFew.Sparse.RandomColoring
 import all PowerOfFew.Sparse.Subconnectivity
 import all Solution
@@ -76,7 +79,8 @@ precomputed set of the library's constants; looking up each constant's module in
 (`Environment.getModuleIdxFor?`) makes the interpreted script take minutes.
 
 To adapt: generate the `import all` lines, fill in the three lists, and set the libraries' root
-names in `isLibraryModule`: the paper's library and `Basic`, the library of general mathematics.
+names in `isLibraryModule`: the paper's library, `External`, the results it cites, and `Basic`,
+the library of general mathematics.
 Keep one `import all` line per module of the libraries, each on its own line: a module that is
 missing is still imported through the others, but without its proofs, and the audit then misses the
 axioms and the routes inside them. The CI template checks the list.
@@ -93,8 +97,8 @@ stops at them. -/
 meta def externalResults : List (String × Name) :=
   [("Berry–Esseen, Shevtsova 2010 (assumed)", ``PowerOfFew.ShevtsovaBerryEsseen),
    ("Feige–Ofek 2005", ``PowerOfFew.FeigeOfek.feigeOfek),
-   ("Benaych-Georges–Bordenave–Knowles Thm 3.2 (not assumed)", ``PowerOfFew.BBKTheorem3_2),
-   ("Boucheron–Lugosi–Massart Thm 6.10 (not assumed)", ``PowerOfFew.BLMTheorem6_10),
+   ("Benaych-Georges–Bordenave–Knowles Thm 3.2 (not assumed)", ``External.BenaychGeorgesBordenaveKnowles.theorem3_2),
+   ("Boucheron–Lugosi–Massart Thm 6.10 (not assumed)", ``External.BoucheronLugosiMassart.theorem6_10),
    ("Hoeffding (upper tail)", ``ProbabilityTheory.measureReal_sum_ge_add_le_exp),
    ("Hoeffding (lower tail)", ``ProbabilityTheory.measureReal_sum_le_sub_le_exp),
    ("Chernoff (relative entropy)", ``ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp_klBern),
@@ -102,7 +106,7 @@ meta def externalResults : List (String × Name) :=
    ("Chernoff (lower tail)", ``ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp),
    ("Matoušek–Nešetřil Prop 2.6.2", ``Nat.centralBinom_lt_four_pow_div_sqrt),
    ("C(n, k) ≤ exp(n H(k/n)) (Stirling)", ``Nat.choose_le_exp_mul_binEntropy),
-   ("Goles–Olivos, Poljak–Sůra", ``PowerOfFew.blueAfter_eventually_period_two)]
+   ("Goles–Olivos, Poljak–Sůra", ``External.GolesOlivos.eventually_period_two)]
 
 /-- The numbered results of the paper, in the order of the paper. -/
 meta def paperResults : List (String × Name) :=
@@ -166,7 +170,8 @@ meta def solutionResults : List Name :=
 meta def standardAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
 /-- Whether `m` is a module of the libraries: the paper's, or `Basic`. -/
-meta def isLibraryModule (m : Name) : Bool := (`PowerOfFew).isPrefixOf m || (`Basic).isPrefixOf m
+meta def isLibraryModule (m : Name) : Bool :=
+  (`PowerOfFew).isPrefixOf m || (`External).isPrefixOf m || (`Basic).isPrefixOf m
 
 /-- The constants declared in the library. -/
 meta def libraryConstants (env : Environment) : NameSet := Id.run do

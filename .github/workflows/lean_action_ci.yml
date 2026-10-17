@@ -15,12 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: leanprover/lean-action@v1
-      # The audit sees a module's proofs only through its own `import all` line. PowerOfFew and Basic
-      # are the libraries' root directories.
+      # The audit sees a module's proofs only through its own `import all` line. PowerOfFew, External
+      # and Basic are the libraries' root directories.
       - name: Check that the audit imports every module of the libraries
         run: >-
-          diff <(find PowerOfFew Basic -name '*.lean' | sed 's/\.lean$//; s#/#.#g' | sort)
-          <(grep -E '^import all (PowerOfFew|Basic)\.' scripts/Audit.lean
+          diff <(find PowerOfFew External Basic -name '*.lean' | sed 's/\.lean$//; s#/#.#g' | sort)
+          <(grep -E '^import all (PowerOfFew|External|Basic)\.' scripts/Audit.lean
           | sed 's/^import all //' | sort)
       - name: Audit axioms and dependencies
         run: lake env lean scripts/Audit.lean

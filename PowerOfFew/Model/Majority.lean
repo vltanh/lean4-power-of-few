@@ -1,6 +1,7 @@
 module
 
 public import PowerOfFew.Defs
+public import External.GolesOlivos.GolesOlivos
 
 /-!
 # Majority dynamics: basic facts
@@ -15,6 +16,11 @@ public import PowerOfFew.Defs
   next day (the dense paper's "universal reduction", Definition 18 of its arXiv version).
 * A Blue set of at most `m` vertices vanishes the next day when every degree exceeds `2m`
   (`majorityStep_eq_empty_of_lt_degree`).
+* Majority dynamics is eventually periodic with period at most two
+  (`blueAfter_eventually_period_two`), by the theorem of Goles and Olivos and of Poljak and Sůra
+  for symmetric threshold networks (`External.GolesOlivos.eventually_period_two`): the tie-keeping
+  majority rule is the threshold network with weights `w_{vu} = 2 [u ∼ v] + [u = v]` and
+  thresholds `b_v = deg v + 1`.
 -/
 
 @[expose] public section
@@ -127,6 +133,15 @@ theorem Shrinks.mono {m₁ m₂ m₁' m₂' : ℝ} (h : Shrinks G m₁ m₂) (h�
     Shrinks G m₁' m₂' := by
   intro B hB
   exact (h B (hB.trans h₁)).trans h₂
+
+/-- **Goles–Olivos (1981), Poljak–Sůra (1983)**, for majority dynamics. Majority dynamics on a
+finite graph becomes periodic with period at most `2`: from some day on, the Blue set on day
+`t + 2` equals that on day `t`. The tie-keeping majority rule is the symmetric threshold network
+with weights `w_{vu} = 2 [u ∼ v] + [u = v]` and thresholds `b_v = deg v + 1`
+(`External.GolesOlivos.eventually_period_two`). -/
+theorem blueAfter_eventually_period_two {n : ℕ} (G : SimpleGraph (Fin n)) (B₀ : Set (Fin n)) :
+    ∃ t₀ : ℕ, ∀ t ≥ t₀, blueAfter G B₀ (t + 2) = blueAfter G B₀ t := by
+  sorry
 
 end PowerOfFew
 

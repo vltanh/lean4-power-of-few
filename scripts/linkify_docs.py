@@ -36,7 +36,7 @@ DOCS = ['README.md', 'REPORT.md', 'CREDITS.md']
 # Namespaces in which the documents name declarations without their prefix, most specific last.
 NAMESPACES = ['PowerOfFew', 'PowerOfFew.Dense', 'PowerOfFew.Sparse', 'Challenge']
 # Top-level module names of the project: a code span naming such a module links to its file.
-MODULE_ROOTS = ('PowerOfFew', 'Basic', 'Challenge', 'Solution')
+MODULE_ROOTS = ('PowerOfFew', 'External', 'Basic', 'Challenge', 'Solution')
 # The module whose declarations win when a name is declared in several modules.
 PREFERRED_MODULE = 'Challenge'
 # Directories, besides the repository root, against which the paths in the documents of a

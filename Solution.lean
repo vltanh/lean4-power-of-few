@@ -6,13 +6,18 @@ public import Basic.Combinatorics.Choose
 public import Basic.Probability.BernoulliFamily
 public import Basic.Probability.Chernoff
 public import Basic.Probability.Concentration
+public import Basic.Probability.WeightedBernoulli
+public import Basic.Probability.Combinatorics.BinomialRandomGraph.EdgeVariables
+public import Basic.Analysis.GridNet
 public import PowerOfFew.Defs
 public import PowerOfFew.Dense.Appendix
 public import PowerOfFew.Dense.BinomialDifference
 public import PowerOfFew.Dense.DayOne
 public import PowerOfFew.Dense.Main
 public import PowerOfFew.Dense.Shrinking
-public import PowerOfFew.External.GolesOlivos.GolesOlivos
+public import External.GolesOlivos.GolesOlivos
+public import External.BenaychGeorgesBordenaveKnowles.Theorem3_2
+public import External.BoucheronLugosiMassart.Theorem6_10
 public import PowerOfFew.Model.BerryEsseen
 public import PowerOfFew.Model.EdgeConditioning
 public import PowerOfFew.Model.Gnp
@@ -33,6 +38,7 @@ public import PowerOfFew.Sparse.DayTwo
 public import PowerOfFew.Sparse.Degrees
 public import PowerOfFew.Sparse.Main
 public import PowerOfFew.Sparse.MatrixNorm
+public import PowerOfFew.Sparse.MatrixNormDerivation
 public import PowerOfFew.Sparse.RandomColoring
 public import PowerOfFew.Sparse.Subconnectivity
 
