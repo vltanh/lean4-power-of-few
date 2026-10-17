@@ -15,9 +15,11 @@ Both papers omit the word "independent" from the statement; Shevtsova's theorem 
 applications have it. Shevtsova states the bound for `P(Sₘ < x B)`; since `Φ` is continuous, the
 two forms are equivalent.
 
-**In the formalization.** `PowerOfFew.ShevtsovaBerryEsseen` (in `PowerOfFew/Defs.lean`, so that the
-Challenge can state it) is the proposition `PowerOfFew.BerryEsseenInequality 0.56`, a hypothesis of
-every theorem whose proof uses it. It is restricted to probability spaces in `Type` and to summands
+**In the formalization.** `PowerOfFew.ShevtsovaBerryEsseen` is the proposition
+`PowerOfFew.BerryEsseenInequality 0.56`, a hypothesis of every theorem whose proof uses it. It is
+defined in `PowerOfFew/Defs.lean`, not in this directory, because the Challenge's statements use it:
+every definition of the Challenge lives in the one module of shared definitions that
+`Challenge.lean` copies. It is restricted to probability spaces in `Type` and to summands
 with positive variances, which makes it weaker, not stronger, than Shevtsova's theorem.
 `PowerOfFew.berryEsseen_signedBernoulli` (`PowerOfFew/Model/BerryEsseen.lean`) derives the form for
 signed Bernoulli sums.

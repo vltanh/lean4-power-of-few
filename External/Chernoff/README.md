@@ -8,3 +8,5 @@ of Lemma A.5), and the bounds `P(Z ≥ T) ≤ exp(−(T − pm)²/(2T))` for `T 
 **In the formalization.** `Basic/Probability/Chernoff.lean`:
 `ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp_klBern`,
 `…measureReal_sum_ge_le_exp` and `…measureReal_sum_le_le_exp`, for sums of a Bernoulli family.
+The same file proves `P(Z ≥ k) ≤ (e p m / k)^k` (`…measureReal_sum_ge_le_exp_mul_log`), which Feige
+and Ofek's argument uses ([`../FeigeOfek/`](../FeigeOfek/README.md)).

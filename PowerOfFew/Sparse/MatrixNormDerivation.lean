@@ -17,9 +17,15 @@ This file formalizes that derivation, with the two results as hypotheses
 
 Reading: the paper quotes the first with `d = p(1 − p)(n − 1)` and `η = √(log n)/min{√d, n^0.1}`;
 the cited theorem has `d = p(n − 1)` (the maximal expected degree) and
-`q = √d ∧ n^(1/10) κ^(-1/9)`, `κ = n/(n − 1)`. The difference only changes constants. The cited
-theorem is stated with Mathlib's adjacency matrix and binomial random graph; the paper's
-`adjMat`, `meanAdj`, `specNorm` and `gnpProb` are the same objects.
+`q = √d ∧ n^(1/10) κ^(-1/9)`, `κ = n/(n − 1)`. The difference only changes constants.
+
+The two cited results are stated in their sources' terms. Theorem 3.2 bounds the expectation of
+the operator norm of `G.adjMatrix ℝ` minus the matrix with `p` off the diagonal, under Mathlib's
+`G(n, p)` with `p` clamped into `[0, 1]`; the bridge `mnAux_bbk_expectation_eq` identifies this
+expectation with the paper's `gnpExp n p (fun G => specNorm (adjMat G - meanAdj n p))`, and
+`mnAux_bbk` restates Theorem 3.2 with it. Theorem 6.10 is stated for any independent
+`[0, 1]`-valued variables; the concentration step applies it to the edge indicators of
+`edgeLaw n p`, whose image under `graphOfEdges` is `G(n, p)`.
 -/
 
 @[expose] public section
@@ -211,6 +217,44 @@ private theorem appAux_symMat_edgeInd {n K : ℕ} (e : OffDiag n ≃ Fin K) (ω 
     · have hadj : ¬ (graphOfEdges ω).Adj u v := fun h => hω (adj_graphOfEdges.mp h).2
       simp only [hω, hadj, ↓reduceIte]
 
+/-! ### Theorem 3.2 of BBK in the paper's vocabulary -/
+
+open Classical in
+/-- The bridge: the expectation in Theorem 3.2 of BBK, written with Mathlib's adjacency matrix
+(with the classical decidability instance), the matrix with `p` off the diagonal and `0` on it,
+the operator norm of `Matrix.toEuclideanCLM`, and Mathlib's `G(n, p)` with `p` clamped into
+`[0, 1]` by `Set.projIcc`, is the paper's `E‖A − E A‖`: these are `adjMat G`, `meanAdj n p`,
+`specNorm` and `toUnit p`. -/
+private theorem mnAux_bbk_expectation_eq (n : ℕ) (p : ℝ) :
+    (∫ G, ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n)
+          (G.adjMatrix ℝ - Matrix.of fun u v => if u = v then 0 else p)‖
+        ∂(SimpleGraph.binomialRandom (Fin n) (Set.projIcc 0 1 zero_le_one p))) =
+      gnpExp n p (fun G => specNorm (adjMat G - meanAdj n p)) := by
+  have hA : ∀ G : SimpleGraph (Fin n), G.adjMatrix ℝ = adjMat G := fun G => by
+    ext u v
+    simp [adjMat]
+  simp only [hA]
+  rfl
+
+/-- **Theorem 3.2 of BBK for the paper's `‖A − E A‖`**: the External form
+`External.BenaychGeorgesBordenaveKnowles.theorem3_2`, read through the bridge
+`mnAux_bbk_expectation_eq`. With `d = p(n − 1)`, `κ = p/(d/n)`, `q = √d ∧ n^(1/10) κ^(−1/9)` and
+`η = √(log n)/q`, if `q ≥ 1` then `E‖A − E A‖/√d ≤ 2 + Cη/√(1 ∨ log η)`. -/
+private theorem mnAux_bbk (hBBK : External.BenaychGeorgesBordenaveKnowles.theorem3_2) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 →
+      let d : ℝ := p * (n - 1)
+      let κ : ℝ := p / (d / n)
+      let q : ℝ := min (Real.sqrt d) ((n : ℝ) ^ (1 / 10 : ℝ) * κ ^ (-(1 / 9 : ℝ)))
+      let η : ℝ := Real.sqrt (Real.log n) / q
+      1 ≤ q →
+        gnpExp n p (fun G => specNorm (adjMat G - meanAdj n p)) / Real.sqrt d ≤
+          2 + C * η / Real.sqrt (max 1 (Real.log η)) := by
+  obtain ⟨C, hC, hB⟩ := hBBK
+  refine ⟨C, hC, ?_⟩
+  intro n p hp0 hp1 d κ q η hq
+  have h := hB n p hp0 hp1 hq
+  rwa [mnAux_bbk_expectation_eq] at h
+
 /-! ### The three steps of the proof of Lemma A.7 -/
 
 /-- Small `n`: `‖A − E A‖ ≤ ‖A − E A‖_F ≤ n`, as the entries of `A − E A` lie in `[−1, 1]`. -/
@@ -327,8 +371,8 @@ private theorem appAux_expectation_arith {E d η M CB x : ℝ} (hCB : 0 < CB) (h
 /-- **The concentration step** (Theorem 6.10 of BLM, as the paper applies it): for the convex
 `1`-Lipschitz function `f(x) = 2^(−1/2) ‖Z(x) − E A‖` of the `n(n − 1)/2` edge indicators,
 `P(‖A − E A‖ > E‖A − E A‖ + √2 t) ≤ e^(−t²/2)`. -/
-private theorem appAux_concentration (hBLM : External.BoucheronLugosiMassart.theorem6_10) {n : ℕ} {p : ℝ} (hp0 : 0 ≤ p)
-    (hp1 : p ≤ 1) {t : ℝ} (ht : 0 < t) :
+private theorem appAux_concentration (hBLM : External.BoucheronLugosiMassart.theorem6_10)
+    {n : ℕ} {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1) {t : ℝ} (ht : 0 < t) :
     (edgeLaw n p).real {ω | gnpExp n p (fun G => specNorm (adjMat G - meanAdj n p)) +
         Real.sqrt 2 * t < specNorm (adjMat (graphOfEdges ω) - meanAdj n p)} ≤
       Real.exp (-t ^ 2 / 2) := by
@@ -384,7 +428,102 @@ theorem lemmaA_7_of_bbk_blm (hBBK : External.BenaychGeorgesBordenaveKnowles.theo
     ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 → c * Real.log n ≤ p * n →
       1 - (n : ℝ) ^ (-a) ≤
         gnpProb n p (fun G => specNorm (adjMat G - meanAdj n p) ≤ C * Real.sqrt (p * n)) := by
-  sorry
+  -- Theorem 3.2 of BBK, through the bridge to the paper's `‖A − E A‖`.
+  obtain ⟨CB, hCB, hBBK⟩ := mnAux_bbk hBBK
+  -- The threshold `N(c)` from which Theorem 3.2 of BBK applies, and the two constants.
+  obtain ⟨N₀, hN₀⟩ : ∃ N₀ : ℕ, N₀ = max 1024 ⌈Real.exp (2 / c)⌉₊ := ⟨_, rfl⟩
+  obtain ⟨C₁, hC₁⟩ : ∃ C₁ : ℝ, C₁ = 2 + CB * (Real.sqrt (2 / c) + 5) + 2 * Real.sqrt (a / c) :=
+    ⟨_, rfl⟩
+  obtain ⟨C₂, hC₂⟩ : ∃ C₂ : ℝ, C₂ = N₀ / Real.sqrt (c * Real.log 2) := ⟨_, rfl⟩
+  refine ⟨max C₁ C₂, fun n p hp0 hp1 hpn => ?_⟩
+  have hsure : (∀ G : SimpleGraph (Fin n),
+      specNorm (adjMat G - meanAdj n p) ≤ max C₁ C₂ * Real.sqrt (p * n)) →
+      1 - (n : ℝ) ^ (-a) ≤
+        gnpProb n p (fun G => specNorm (adjMat G - meanAdj n p) ≤
+          max C₁ C₂ * Real.sqrt (p * n)) := by
+    intro h
+    have h1 := gnpProb_mono (n := n) (p := p) (P := fun _ => True) (fun G _ => h G)
+    rw [gnpProb_true] at h1
+    have : 0 ≤ (n : ℝ) ^ (-a) := Real.rpow_nonneg (Nat.cast_nonneg n) _
+    linarith
+  rcases Nat.lt_or_ge n 2 with hn2 | hn2
+  · -- `n ≤ 1`
+    interval_cases n
+    · apply hsure
+      intro G
+      have h := appAux_specNorm_le_card hp0.le hp1 G
+      simpa using h
+    · simp only [Nat.cast_one, Real.one_rpow, sub_self]
+      exact gnpProb_nonneg _
+  have hn2' : (2 : ℝ) ≤ n := by exact_mod_cast hn2
+  have hnpos : (0 : ℝ) < n := by linarith
+  rcases Nat.lt_or_ge n N₀ with hnN | hnN
+  · -- `2 ≤ n < N(c)`: `‖A − E A‖ ≤ n < N(c) ≤ C₂ √(pn)`, surely.
+    apply hsure
+    intro G
+    have hlog2 : c * Real.log 2 ≤ p * n :=
+      (mul_le_mul_of_nonneg_left (Real.log_le_log two_pos hn2') hc.le).trans hpn
+    have hpos : 0 < Real.sqrt (c * Real.log 2) :=
+      Real.sqrt_pos.mpr (mul_pos hc (Real.log_pos one_lt_two))
+    have h4 : (N₀ : ℝ) ≤ C₂ * Real.sqrt (p * n) := by
+      rw [hC₂, div_mul_eq_mul_div, le_div_iff₀ hpos]
+      exact mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt hlog2) (Nat.cast_nonneg _)
+    calc specNorm (adjMat G - meanAdj n p) ≤ n := appAux_specNorm_le_card hp0.le hp1 G
+      _ ≤ N₀ := by exact_mod_cast hnN.le
+      _ ≤ C₂ * Real.sqrt (p * n) := h4
+      _ ≤ max C₁ C₂ * Real.sqrt (p * n) :=
+          mul_le_mul_of_nonneg_right (le_max_right _ _) (Real.sqrt_nonneg _)
+  -- `n ≥ N(c)`.
+  have hn : (N₀ : ℝ) ≤ n := by exact_mod_cast hnN
+  have hN1 : (1024 : ℝ) ≤ N₀ := by
+    rw [hN₀]
+    exact_mod_cast le_max_left 1024 ⌈Real.exp (2 / c)⌉₊
+  have hN2 : Real.exp (2 / c) ≤ N₀ := by
+    refine (Nat.le_ceil _).trans ?_
+    rw [hN₀]
+    exact_mod_cast le_max_right 1024 ⌈Real.exp (2 / c)⌉₊
+  have hlogn : 2 / c ≤ Real.log n := by
+    rw [← Real.log_exp (2 / c)]
+    exact Real.log_le_log (Real.exp_pos _) (hN2.trans hn)
+  have hlogpos : 0 < Real.log n := lt_of_lt_of_le (by positivity) hlogn
+  -- Theorem 3.2 of BBK: `E‖A − E A‖ ≤ (2 + C M_c)√(pn)`.
+  obtain ⟨hq1, hηM⟩ := appAux_bbk_params hc hp0 hpn hp1 (hN1.trans hn) hlogn
+  have hB := hBBK n p hp0 hp1 hq1
+  have hd0 : 0 < p * ((n : ℝ) - 1) := by nlinarith
+  have hdx : p * ((n : ℝ) - 1) ≤ p * n := by nlinarith
+  have hη0 : 0 ≤ Real.sqrt (Real.log n) / min (Real.sqrt (p * (n - 1)))
+      ((n : ℝ) ^ (1 / 10 : ℝ) * (p / (p * (n - 1) / n)) ^ (-(1 / 9 : ℝ))) :=
+    div_nonneg (Real.sqrt_nonneg _) (by linarith)
+  have hE : gnpExp n p (fun G => specNorm (adjMat G - meanAdj n p)) ≤
+      (2 + CB * (Real.sqrt (2 / c) + 5)) * Real.sqrt (p * n) :=
+    appAux_expectation_arith hCB hd0 hdx hη0 hηM hB
+  -- Theorem 6.10 of BLM with `t = √(2a log n)`: `√2 t = 2√(a log n) ≤ 2√(a/c) √(pn)`.
+  have ht : 0 < Real.sqrt (2 * a * Real.log n) := Real.sqrt_pos.mpr (by positivity)
+  have hconc := appAux_concentration (n := n) hBLM hp0.le hp1 ht
+  have hst : Real.sqrt 2 * Real.sqrt (2 * a * Real.log n) ≤
+      2 * Real.sqrt (a / c) * Real.sqrt (p * n) := by
+    have h1 : Real.sqrt 2 * Real.sqrt (2 * a * Real.log n) = 2 * Real.sqrt (a * Real.log n) := by
+      rw [← Real.sqrt_mul (by norm_num),
+        show 2 * (2 * a * Real.log n) = 2 ^ 2 * (a * Real.log n) by ring,
+        Real.sqrt_mul (by norm_num), Real.sqrt_sq (by norm_num)]
+    rw [h1, mul_assoc, ← Real.sqrt_mul (by positivity)]
+    apply mul_le_mul_of_nonneg_left _ (by norm_num)
+    apply Real.sqrt_le_sqrt
+    rw [div_mul_eq_mul_div, le_div_iff₀ hc]
+    nlinarith
+  apply le_gnpProb_of_not_le
+  rw [gnpProb_eq]
+  refine le_trans (measureReal_mono fun ω hω => ?_) (hconc.trans (le_of_eq ?_))
+  · simp only [Set.mem_ofPred_eq, not_le] at hω ⊢
+    have h1 : C₁ * Real.sqrt (p * n) ≤ max C₁ C₂ * Real.sqrt (p * n) :=
+      mul_le_mul_of_nonneg_right (le_max_left _ _) (Real.sqrt_nonneg _)
+    have h2 : C₁ * Real.sqrt (p * n) = (2 + CB * (Real.sqrt (2 / c) + 5)) * Real.sqrt (p * n) +
+        2 * Real.sqrt (a / c) * Real.sqrt (p * n) := by
+      rw [hC₁]; ring
+    linarith
+  · rw [Real.sq_sqrt (by positivity), Real.rpow_def_of_pos hnpos]
+    congr 1
+    ring
 
 end PowerOfFew.Sparse
 
