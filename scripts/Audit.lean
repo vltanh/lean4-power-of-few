@@ -91,6 +91,7 @@ meta def externalResults : List (String × Name) :=
    ("Chernoff (upper tail)", ``ProbabilityTheory.IsBernoulliFamily.measureReal_sum_ge_le_exp),
    ("Chernoff (lower tail)", ``ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp),
    ("Matoušek–Nešetřil Prop 2.6.2", ``Nat.centralBinom_lt_four_pow_div_sqrt),
+   ("C(n, k) ≤ exp(n H(k/n)) (Stirling)", ``Nat.choose_le_exp_mul_binEntropy),
    ("Goles–Olivos, Poljak–Sůra", ``PowerOfFew.blueAfter_eventually_period_two)]
 
 /-- The numbered results of the paper, in the order of the paper. -/

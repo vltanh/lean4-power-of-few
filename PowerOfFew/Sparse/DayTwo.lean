@@ -45,10 +45,10 @@ noncomputable section
 
 namespace PowerOfFew.Sparse
 
-/-- `h(x) = x log x + (1 − x) log(1 − x)` (sparse paper, equation (5)). -/
+/-- `h(x) = x log x + (1 − x) log(1 − x)` (sparse paper, equation (7)). -/
 def h (x : ℝ) : ℝ := x * Real.log x + (1 - x) * Real.log (1 - x)
 
-/-- `F(d, x, y) = d x (1 − y/2 − (3/2) y^(1/3) (1 − y)^(2/3)) + 2 h(y)`: the paper's equation (6),
+/-- `F(d, x, y) = d x (1 − y/2 − (3/2) y^(1/3) (1 − y)^(2/3)) + 2 h(y)`: the paper's equation (8),
 with `2h(y)` (the source fraction) in place of the printed `2h(x)`, as its proof and Lemma 2.4
 use. -/
 def F (d x y : ℝ) : ℝ :=
@@ -805,7 +805,12 @@ vertices are Blue on day 1.
 
 Reading: `e^(−Ω(n))` is `exp(−κ n)` for some `κ > 0` depending on `a` and `b`, for `n` large.
 Deviation (hypotheses of Lemma 2.3 as its proof uses them): `2√p ≤ a`, so that
-`b₁ = 1/2 − a/√(pn) ≤ 1/2 − 2/√n`, and `b ≤ b₁`. -/
+`b₁ = 1/2 − a/√(pn) ≤ 1/2 − 2/√n`, and `b ≤ b₁`.
+
+Departure from the paper (a gap filled): the paper bounds `F(pn, b, b₁)` from below by "a routine
+Taylor expansion around 1/2" of `1 − b₁/2 − (3/2) b₁^(1/3) (1 − b₁)^(2/3)`, which covers only `b₁`
+near `1/2`; the proof uses the inequality on all of `[0, 1/2]`, proved exactly
+(`Real.one_sub_two_mul_sq_div_three_le`). -/
 theorem lemma2_4 {a b : ℝ} (ha : 0 < a) (hb0 : 0 < b) (hb1 : b < 1 / 2)
     (hab : 3 * Real.log 2 / 2 < b * a ^ 2) :
     ∃ κ : ℝ, 0 < κ ∧ ∃ N : ℕ, ∀ n ≥ N, ∀ p : ℝ, 0 < p → p < 1 → 2 * Real.sqrt p ≤ a →
