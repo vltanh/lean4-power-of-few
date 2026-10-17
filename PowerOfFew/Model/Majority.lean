@@ -134,6 +134,88 @@ theorem Shrinks.mono {m₁ m₂ m₁' m₂' : ℝ} (h : Shrinks G m₁ m₂) (h�
   intro B hB
   exact (h B (hB.trans h₁)).trans h₂
 
+/-! ### Majority dynamics as a symmetric threshold network -/
+
+open Classical in
+/-- The weights `w_{vu} = 2 [u ∼ v] + [u = v]`. -/
+private def goAux_weight {n : ℕ} (G : SimpleGraph (Fin n)) (v u : Fin n) : ℝ :=
+  (if G.Adj v u then 2 else 0) + (if u = v then 1 else 0)
+
+/-- The thresholds `b_v = deg v + 1`. -/
+private def goAux_thr {n : ℕ} (G : SimpleGraph (Fin n)) (v : Fin n) : ℝ := (degree G v : ℝ) + 1
+
+private theorem goAux_weight_symm {n : ℕ} (G : SimpleGraph (Fin n)) (v u : Fin n) :
+    goAux_weight G v u = goAux_weight G u v := by
+  unfold goAux_weight
+  rw [G.adj_comm v u]
+  by_cases h : u = v
+  · subst h
+    rfl
+  · simp [h, Ne.symm h]
+
+/-- The field of `v` in the state `y` is `2 · (number of Blue neighbours) + [v is Blue]`, where the
+Blue vertices are those in the state `true`. -/
+private theorem goAux_field_eq {n : ℕ} (G : SimpleGraph (Fin n)) (y : Fin n → Bool) (v : Fin n) :
+    ∑ u, goAux_weight G v u * (if y u then 1 else 0) =
+      2 * (nbrCount G {u | y u = true} v : ℝ) + (if y v then 1 else 0) := by
+  classical
+  have hcount : (nbrCount G {u | y u = true} v : ℝ) =
+      ∑ u, if G.Adj v u ∧ y u = true then 1 else 0 := by
+    have h : {u | G.Adj v u ∧ u ∈ {u | y u = true}} =
+        ↑(Finset.univ.filter fun u => G.Adj v u ∧ y u = true) := by
+      ext u
+      simp
+    unfold nbrCount
+    rw [h, Set.ncard_coe_finset, Finset.natCast_card_filter]
+  have hpt : ∀ u, goAux_weight G v u * (if y u then 1 else 0) =
+      2 * (if G.Adj v u ∧ y u = true then 1 else 0) +
+        (if u = v then (if y v then 1 else 0) else 0) := by
+    intro u
+    by_cases huv : u = v
+    · subst huv
+      simp [goAux_weight]
+    · by_cases hadj : G.Adj v u <;> by_cases hy : y u <;> simp [goAux_weight, huv, hadj, hy]
+  rw [hcount]
+  simp only [hpt, Finset.sum_add_distrib, ← Finset.mul_sum, Finset.sum_ite_eq', Finset.mem_univ,
+    ↓reduceIte]
+
+/-- One step of the threshold network with the weights `goAux_weight G` and the thresholds
+`goAux_thr G` is one day of majority dynamics: a vertex is Blue the next day iff
+`deg v + 1 ≤ 2 · (number of Blue neighbours) + [v is Blue]`. -/
+private theorem goAux_step_eq {n : ℕ} (G : SimpleGraph (Fin n)) (y : Fin n → Bool) :
+    {v | External.GolesOlivos.step (goAux_weight G) (goAux_thr G) y v = true} =
+      majorityStep G {v | y v = true} := by
+  ext v
+  have hsum := nbrCount_add_nbrCount_compl G {u | y u = true} v
+  simp only [Set.mem_ofPred_eq, External.GolesOlivos.step, goAux_thr, decide_eq_true_eq,
+    goAux_field_eq, majorityStep]
+  cases hy : y v
+  · simp only [Bool.false_eq_true, ↓reduceIte, add_zero, and_false, or_false]
+    constructor
+    · intro h
+      have h' : degree G v + 1 ≤ 2 * nbrCount G {u | y u = true} v := by exact_mod_cast h
+      omega
+    · intro h
+      have h' : degree G v + 1 ≤ 2 * nbrCount G {u | y u = true} v := by omega
+      exact_mod_cast h'
+  · simp only [↓reduceIte, and_true]
+    constructor
+    · intro h
+      have h' : degree G v + 1 ≤ 2 * nbrCount G {u | y u = true} v + 1 := by exact_mod_cast h
+      omega
+    · intro h
+      have h' : degree G v + 1 ≤ 2 * nbrCount G {u | y u = true} v + 1 := by omega
+      exact_mod_cast h'
+
+/-- The Blue sets of majority dynamics are the states of the threshold network. -/
+private theorem goAux_blueAfter_eq {n : ℕ} (G : SimpleGraph (Fin n)) (y : Fin n → Bool) (t : ℕ) :
+    blueAfter G {v | y v = true} t =
+      {v | (External.GolesOlivos.step (goAux_weight G) (goAux_thr G))^[t] y v = true} := by
+  induction t with
+  | zero => rfl
+  | succ t ih =>
+    rw [blueAfter_succ, ih, ← goAux_step_eq, Function.iterate_succ_apply']
+
 /-- **Goles–Olivos (1981), Poljak–Sůra (1983)**, for majority dynamics. Majority dynamics on a
 finite graph becomes periodic with period at most `2`: from some day on, the Blue set on day
 `t + 2` equals that on day `t`. The tie-keeping majority rule is the symmetric threshold network
@@ -141,7 +223,15 @@ with weights `w_{vu} = 2 [u ∼ v] + [u = v]` and thresholds `b_v = deg v + 1`
 (`External.GolesOlivos.eventually_period_two`). -/
 theorem blueAfter_eventually_period_two {n : ℕ} (G : SimpleGraph (Fin n)) (B₀ : Set (Fin n)) :
     ∃ t₀ : ℕ, ∀ t ≥ t₀, blueAfter G B₀ (t + 2) = blueAfter G B₀ t := by
-  sorry
+  classical
+  -- The initial state of the threshold network: unit `v` is on iff `v` is Blue.
+  have hB₀ : {v | decide (v ∈ B₀) = true} = B₀ := by
+    ext v
+    simp
+  obtain ⟨t₀, ht₀⟩ := External.GolesOlivos.eventually_period_two (goAux_weight G)
+    (goAux_weight_symm G) (goAux_thr G) (fun v => decide (v ∈ B₀))
+  refine ⟨t₀, fun t ht => ?_⟩
+  rw [← hB₀, goAux_blueAfter_eq, goAux_blueAfter_eq, ht₀ t ht]
 
 end PowerOfFew
 
