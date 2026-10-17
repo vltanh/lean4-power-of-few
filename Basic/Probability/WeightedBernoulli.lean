@@ -57,8 +57,8 @@ private lemma integral_exp_mul_sub_le (hX : IsBernoulliFamily μ p X) (hp0 : 0 �
 
 /-- The exponential moment of a weighted centred sum: if `θ ≥ 0` and `θ |aᵢ| ≤ 1` for `i ∈ s`,
 then `E exp(θ ∑_{i ∈ s} aᵢ (Xᵢ − p)) ≤ exp(p θ² ∑_{i ∈ s} aᵢ²)`. -/
-theorem integral_exp_mul_sum_le (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
-    (s : Finset ι) (a : ι → ℝ) {θ : ℝ} (hθ : 0 ≤ θ) (ha : ∀ i ∈ s, θ * |a i| ≤ 1) :
+theorem integral_exp_mul_sum_le (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p) (s : Finset ι)
+    (a : ι → ℝ) {θ : ℝ} (hθ : 0 ≤ θ) (ha : ∀ i ∈ s, θ * |a i| ≤ 1) :
     ∫ ω, Real.exp (θ * ∑ i ∈ s, a i * (X i ω - p)) ∂μ ≤
       Real.exp (p * θ ^ 2 * ∑ i ∈ s, a i ^ 2) := by
   -- The centred weighted variables `Yᵢ = aᵢ (Xᵢ − p)` are independent, so the exponential
@@ -110,7 +110,7 @@ theorem measureReal_le_sum_mul_le (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p
   calc Real.exp (-θ * t) * mgf (fun ω => ∑ i ∈ s, a i * (X i ω - p)) μ θ
       ≤ Real.exp (-θ * t) * Real.exp (p * θ ^ 2 * ∑ i ∈ s, a i ^ 2) := by
         gcongr
-        exact integral_exp_mul_sum_le hX hp0 hp1 s a hθ ha
+        exact integral_exp_mul_sum_le hX hp0 s a hθ ha
     _ = Real.exp (p * θ ^ 2 * ∑ i ∈ s, a i ^ 2 - θ * t) := by
         rw [← Real.exp_add]
         congr 1
