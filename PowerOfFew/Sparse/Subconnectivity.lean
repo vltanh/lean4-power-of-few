@@ -631,7 +631,13 @@ private lemma subconAux_event {n : ℕ} (G : SimpleGraph (Fin n)) (B₀ : Set (F
 With probability at least `1 − O(1/min{n, pΔ²} + n^(−(1−λ)))` there is a day `t*` such that
 `B_t = B_{t*}` or `B_t = B_{t*+1}` for all `t ≥ t*`,
 `|B_{t*+1}| ≤ |B_{t*}| ≤ (log n)^(O_λ(log^(1/2) n)) n^λ`, and the average degree of the vertices of
-`B_{t*}` is `O_λ(√(pn))`. -/
+`B_{t*}` is `O_λ(√(pn))`.
+
+Departure from the paper (a step the paper leaves implicit): to apply Lemma 2.5 on every day from
+day 2 on, the proof needs `|B_t| ≤ n/4` for every `t ≥ 2`; the paper does not say so, and the proof
+gets it from the paper's own dichotomy (Blue halves while it has at least `n^(λ+δ)` vertices, and
+`n^(λ+δ) ≤ n/4`). The failure probability of the average-degree event is the one Lemma A.5 gives,
+`n^(−δ n^(λ+δ)/2)`, where the paper writes `e^(−Ω(n^λ))`. -/
 theorem theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
     {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam < 1) :
     ∃ C K : ℝ, ∀ (n : ℕ) (B₀ : Set (Fin n)),

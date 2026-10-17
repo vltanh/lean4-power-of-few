@@ -820,7 +820,7 @@ Lemma A.4 (`lemmaA_4`) with `ε = λ` gives it minimum degree at least `α_λ p 
 probability `m^(−λ/2)` (`lazyFinalAux_good`, `lazyFinalAux_day`); a union bound over the
 `O(log n / (p_up p_ac))` days gives `O(n^(−λ/4))`.
 
-Proof note (gaps that the paper leaves in step (3), filled with routine estimates): Lemma A.4
+Departure from the paper (gaps that the paper leaves in step (3), filled along its lines): Lemma A.4
 needs `p m ≥ (1 + λ) log m`, which the paper does not check for `m = |A_t|`. With
 `η = log(1/p_ac) / (2 log n)` and `m₀ = (1 − η) p_ac n`, it holds for every `m ≥ m₀` once `n` is
 large (`lazyFinalAux_m₀`, `lazyFinalAux_log_le_of_le`), and Chernoff's lower tail bounds the

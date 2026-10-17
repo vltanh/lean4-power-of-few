@@ -670,7 +670,7 @@ average degree is the event `X < εpnk`. The same Chernoff bound is applied at t
 `εpnk = ε E X + εpk`, which adds `t* εpk = O(pk log(1/ε))` to the exponent, absorbed with the
 paper's `O(pk)` terms (`appAux_exponent_le`).
 
-Gap filled: the paper only treats sets of exactly `⌈n^(λ+δ)⌉` vertices. A larger set with a small
+Departure from the paper (a gap filled): the paper only treats sets of exactly `⌈n^(λ+δ)⌉` vertices. A larger set with a small
 average degree contains such a set with a small average degree: removing a vertex of maximal
 degree does not increase the average (`appAux_le_sum_of_card_eq`). -/
 theorem lemmaA_5 {lam : ℝ} (hlam : 0 < lam) (hlam1 : lam < 1) :
