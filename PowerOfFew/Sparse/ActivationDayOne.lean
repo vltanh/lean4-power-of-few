@@ -3,6 +3,7 @@ module
 public import PowerOfFew.Sparse.DayOne
 public import PowerOfFew.Model.Lazy
 public import Basic.Probability.Concentration
+public import Basic.Probability.Chernoff
 
 /-!
 # Sparse paper, Section 4: the first day with random activations and updates
@@ -14,8 +15,9 @@ Proposition 2.2, run on the subgraph induced by the vertices active on day 1. Se
 The proof follows Appendix B:
 
 * the activation counts `|A₀ ∩ B₀|`, `|A₀ ∩ R₀|` are within `C_ε √(p_ac |·|)` of their means with
-  probability at least `1 − ε/2` (the paper's (day1-lazy-pf-bound-Vac); Chebyshev's inequality,
-  `lazyDayOneAux_act_dev`);
+  probability at least `1 − ε/2` (the paper's (day1-lazy-pf-bound-Vac), "by a Chernoff bound": the
+  tails (29) and (30), `lazyDayOneAux_act_dev`; for a small `|B₀|` the band is widened to
+  `C_ε √(max{p_ac |B₀|, C_ε²})`);
 * for such activations `A₀ = A`, with `m = |A|`, the Blue active vertices of day 1 number
   `|B| = ∑_{i < m} (U_i 𝟙_H(i) + (1 − U_i) 𝟙_{B₀}(i))` (the paper's (lazy-b1-formula),
   `lazyDayOneAux_ncard_lazyStep`), where `H` is the Blue set after one day of majority dynamics on
@@ -94,63 +96,80 @@ private lemma lazyDayOneAux_integral_fst {α β : Type*} [MeasurableSpace α] [M
     ∫ w, f w.1 ∂(μ.prod ν) = ∫ x, f x ∂μ := by
   simpa using integral_prod_mul (μ := μ) (ν := ν) f (fun _ => (1 : ℝ))
 
-/-- Chebyshev's inequality for a sum `Z` of `k` independent Bernoulli(`q`) variables:
-`P(|Z − qk| > C √(qk)) ≤ 1/C²` (the variance of `Z` is `qk(1 − q) ≤ qk`). -/
+/-- The paper's "by a Chernoff bound", for a sum `Z = ∑_{i ∈ s} X_i` of independent
+Bernoulli(`q`) variables with mean `q|s|`: for `w ≥ max{q|s|, C²}`,
+`P(|Z − q|s|| > C √w) ≤ 2 e^(−C²/4)`, from the upper tail (29) (as `C √w ≤ w`) and the lower
+tail (30). -/
 private lemma lazyDayOneAux_bernoulli_dev {Ω ι : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {q : ℝ} {X : ι → Ω → ℝ} (hX : IsBernoulliFamily μ q X)
-    (hq0 : 0 < q) (s : Finset ι) {C : ℝ} (hC : 0 < C) :
-    μ.real {ω | C * Real.sqrt (q * s.card) < |∑ i ∈ s, X i ω - q * s.card|} ≤ 1 / C ^ 2 := by
-  classical
-  rcases s.eq_empty_or_nonempty with rfl | hs
-  · simp; positivity
-  have hcard : (0 : ℝ) < s.card := by exact_mod_cast hs.card_pos
-  have hmem : ∀ i, MemLp (X i) 2 μ := fun i =>
-    MemLp.of_bound (hX.measurable i).aestronglyMeasurable 1 (ae_of_all _ fun ω => by
-      rcases hX.zero_or_one i ω with h | h <;> simp [h])
-  set S : Ω → ℝ := fun ω => ∑ i ∈ s, X i ω with hS_def
-  have hS : S = ∑ i ∈ s, X i := (Finset.sum_fn s X).symm
-  have hSmem : MemLp S 2 μ := by rw [hS]; exact memLp_finsetSum' s fun i _ => hmem i
-  have hE : μ[S] = q * s.card := by
-    rw [hS_def, integral_finsetSum s fun i _ => (hmem i).integrable one_le_two]
-    simp [hX.integral_eq, mul_comm]
-  have hvar1 : ∀ i, variance (X i) μ = q * (1 - q) := fun i => by
-    rw [variance_eq_integral (hX.measurable i).aemeasurable, hX.integral_eq i,
-      hX.integral_sq_sub i]
-  have hV : variance S μ = s.card * (q * (1 - q)) := by
-    rw [hS, IndepFun.variance_sum (fun i _ => hmem i)
-      (fun i _ j _ hij => hX.indep.indepFun hij)]
-    simp [hvar1]
-  have hc : 0 < C * Real.sqrt (q * s.card) := by positivity
-  have hcheb := meas_ge_le_variance_div_sq hSmem hc
-  have hsq : (C * Real.sqrt (q * s.card)) ^ 2 = C ^ 2 * (q * s.card) := by
-    rw [mul_pow, Real.sq_sqrt (by positivity)]
-  calc μ.real {ω | C * Real.sqrt (q * s.card) < |∑ i ∈ s, X i ω - q * s.card|}
-      ≤ μ.real {ω | C * Real.sqrt (q * s.card) ≤ |S ω - μ[S]|} := by
-        refine measureReal_mono (fun ω hω => ?_) (measure_ne_top _ _)
-        simp only [Set.mem_ofPred_eq] at hω ⊢
-        rw [hE]; exact hω.le
-    _ ≤ variance S μ / (C * Real.sqrt (q * s.card)) ^ 2 := by
-        rw [measureReal_def]
-        exact ENNReal.toReal_le_of_le_ofReal (div_nonneg (variance_nonneg _ _) (sq_nonneg _))
-          hcheb
-    _ = (1 - q) / C ^ 2 := by
-        rw [hV, hsq]; field_simp
-    _ ≤ 1 / C ^ 2 := by gcongr; linarith
+    (hq0 : 0 ≤ q) (hq1 : q ≤ 1) (s : Finset ι) {C w : ℝ} (hC : 0 < C) (hw : q * s.card ≤ w)
+    (hCw : C ^ 2 ≤ w) :
+    μ.real {ω | C * Real.sqrt w < |∑ i ∈ s, X i ω - q * s.card|} ≤
+      2 * Real.exp (-(C ^ 2 / 4)) := by
+  have hw0 : 0 < w := lt_of_lt_of_le (by positivity) hCw
+  have hsw : 0 < Real.sqrt w := Real.sqrt_pos.2 hw0
+  have hCsw0 : 0 < C * Real.sqrt w := mul_pos hC hsw
+  have hsq : (C * Real.sqrt w) ^ 2 = C ^ 2 * w := by rw [mul_pow, Real.sq_sqrt hw0.le]
+  have hCsw : C * Real.sqrt w ≤ w := by
+    have h1 : C ≤ Real.sqrt w := (Real.le_sqrt' hC).2 hCw
+    calc C * Real.sqrt w ≤ Real.sqrt w * Real.sqrt w := mul_le_mul_of_nonneg_right h1 hsw.le
+      _ = w := Real.mul_self_sqrt hw0.le
+  have hμ0 : 0 ≤ q * s.card := by positivity
+  have hsub : {ω | C * Real.sqrt w < |∑ i ∈ s, X i ω - q * s.card|} ⊆
+      {ω | q * s.card + C * Real.sqrt w ≤ ∑ i ∈ s, X i ω} ∪
+        {ω | ∑ i ∈ s, X i ω ≤ q * s.card - C * Real.sqrt w} := by
+    intro ω hω
+    simp only [Set.mem_ofPred_eq, Set.mem_union] at hω ⊢
+    rcases lt_abs.1 hω with h | h
+    · left; linarith
+    · right; linarith
+  -- the upper tail (29): `(C √w)² / (2 (q|s| + C √w)) ≥ C²/4` as `q|s| + C √w ≤ 2w`
+  have hup : μ.real {ω | q * s.card + C * Real.sqrt w ≤ ∑ i ∈ s, X i ω} ≤
+      Real.exp (-(C ^ 2 / 4)) := by
+    refine (hX.measureReal_sum_ge_le_exp hq0 hq1 s (by linarith)).trans ?_
+    rw [Real.exp_le_exp, neg_le_neg_iff, add_sub_cancel_left, hsq,
+      div_le_div_iff₀ (by norm_num) (by positivity)]
+    have : q * s.card + C * Real.sqrt w ≤ 2 * w := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left this (sq_nonneg C)]
+  -- the lower tail (30): `(C √w)² / (2 q|s|) ≥ C²/4` as `q|s| ≤ w`; empty if `q|s| = 0`
+  have hlo : μ.real {ω | ∑ i ∈ s, X i ω ≤ q * s.card - C * Real.sqrt w} ≤
+      Real.exp (-(C ^ 2 / 4)) := by
+    rcases hμ0.eq_or_lt with h0 | h0
+    · have hempty : {ω | ∑ i ∈ s, X i ω ≤ q * s.card - C * Real.sqrt w} = ∅ := by
+        ext ω
+        simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
+        have : 0 ≤ ∑ i ∈ s, X i ω := Finset.sum_nonneg fun i _ => by
+          rcases hX.zero_or_one i ω with h | h <;> simp [h]
+        rw [← h0]; linarith
+      rw [hempty, measureReal_empty]; positivity
+    · refine (hX.measureReal_sum_le_le_exp hq0 hq1 s (by linarith)).trans ?_
+      rw [Real.exp_le_exp, neg_le_neg_iff, sub_sub_cancel, hsq,
+        div_le_div_iff₀ (by norm_num) (by positivity)]
+      nlinarith [mul_le_mul_of_nonneg_left hw (sq_nonneg C)]
+  calc μ.real {ω | C * Real.sqrt w < |∑ i ∈ s, X i ω - q * s.card|}
+      ≤ μ.real ({ω | q * s.card + C * Real.sqrt w ≤ ∑ i ∈ s, X i ω} ∪
+          {ω | ∑ i ∈ s, X i ω ≤ q * s.card - C * Real.sqrt w}) :=
+        measureReal_mono hsub (measure_ne_top _ _)
+    _ ≤ _ := measureReal_union_le _ _
+    _ ≤ Real.exp (-(C ^ 2 / 4)) + Real.exp (-(C ^ 2 / 4)) := add_le_add hup hlo
+    _ = 2 * Real.exp (-(C ^ 2 / 4)) := by ring
 
 /-- The coins of one kind (activation or update) of one day: independent Bernoulli(`q`). -/
 private abbrev lazyDayOneAux_coins (n : ℕ) (q : ℝ) : Measure (Fin n → Bool) :=
   Measure.pi fun _ : Fin n => bernoulliMeasure true false (toUnit q)
 
-/-- The paper's (day1-lazy-pf-bound-Vac), for one set `S`: the number of active vertices of `S`
-deviates from `p_ac |S|` by more than `C √(p_ac |S|)` with probability at most `1/C²`
-(Chebyshev's inequality). -/
+/-- The paper's (day1-lazy-pf-bound-Vac) for one set `S`: the number of active vertices of `S`
+deviates from `p_ac |S|` by more than `C √(max{p_ac |S|, C²})` with probability at most
+`2 e^(−C²/4)`. -/
 private lemma lazyDayOneAux_act_dev {n : ℕ} {pac pup : ℝ} (hpac0 : 0 < pac) (hpac1 : pac ≤ 1)
     (S : Set (Fin n)) {C : ℝ} (hC : 0 < C) :
-    (dayLaw n pac pup).real {d | C * Real.sqrt (pac * S.ncard) <
-      |((S ∩ {v | d.1 v = true}).ncard : ℝ) - pac * S.ncard|} ≤ 1 / C ^ 2 := by
+    (dayLaw n pac pup).real {d | C * Real.sqrt (max (pac * S.ncard) (C ^ 2)) <
+      |((S ∩ {v | d.1 v = true}).ncard : ℝ) - pac * S.ncard|} ≤ 2 * Real.exp (-(C ^ 2 / 4)) := by
   classical
   have h := lazyDayOneAux_bernoulli_dev
-    (isBernoulliFamily_act (n := n) (pup := pup) hpac0.le hpac1) hpac0 S.toFinset hC
+    (isBernoulliFamily_act (n := n) (pup := pup) hpac0.le hpac1) hpac0.le hpac1 S.toFinset hC
+    (w := max (pac * S.ncard) (C ^ 2))
+    (by rw [← Set.ncard_eq_toFinset_card']; exact le_max_left _ _) (le_max_right _ _)
   simp only [← Set.ncard_eq_toFinset_card'] at h
   convert h using 4 with d
   rw [ncard_inter_setOf_eq_sum]
@@ -673,9 +692,9 @@ private lemma lazyDayOneAux_good (hBE : ShevtsovaBerryEsseen) {n : ℕ} {p pac p
     (hT : max (24 * C / (Dc 2 / 2)) (12 / (Dc 2 * Real.sqrt ε)) ≤
       Real.sqrt p * pup * pac * ((n : ℝ) / 2 - B₀.ncard))
     (hgB : |((B₀ ∩ {v | a v = true}).ncard : ℝ) - pac * B₀.ncard| ≤
-      C * Real.sqrt (pac * B₀.ncard))
+      C * Real.sqrt (max (pac * B₀.ncard) (C ^ 2)))
     (hgR : |((B₀ᶜ ∩ {v | a v = true}).ncard : ℝ) - pac * (B₀ᶜ.ncard : ℝ)| ≤
-      C * Real.sqrt (pac * (B₀ᶜ.ncard : ℝ))) :
+      C * Real.sqrt (max (pac * (B₀ᶜ.ncard : ℝ)) (C ^ 2))) :
     ∑ u, (lazyDayOneAux_coins n pup).real {u} *
       gnpProb n p (fun G => ¬ ((lazyStep G {v | a v = true} {v | u v = true} B₀).ncard : ℝ) ≤
         n / 2 - K * Real.sqrt (n / (p * pac))) ≤ ε / 2 := by
@@ -718,10 +737,12 @@ private lemma lazyDayOneAux_good (hBE : ShevtsovaBerryEsseen) {n : ℕ} {p pac p
   have hnB0 : 0 ≤ nB := Nat.cast_nonneg _
   have hnBn : nB ≤ n := by
     have := Nat.cast_nonneg (α := ℝ) (B₀ᶜ.ncard); linarith
-  have hsB : Real.sqrt (pac * nB) ≤ s :=
-    Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left hnBn hpac0.le)
-  have hsR : Real.sqrt (pac * (n - nB)) ≤ s :=
-    Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left (by linarith) hpac0.le)
+  -- the deviations `C √(max{p_ac |S|, C²})` are at most `C √(p_ac n)`, as the paper uses them
+  have hC2n : C ^ 2 ≤ pac * n := by linarith only [hpac_n, sq_nonneg C]
+  have hsB : Real.sqrt (max (pac * nB) (C ^ 2)) ≤ s :=
+    Real.sqrt_le_sqrt (max_le (mul_le_mul_of_nonneg_left hnBn hpac0.le) hC2n)
+  have hsR : Real.sqrt (max (pac * (n - nB)) (C ^ 2)) ≤ s :=
+    Real.sqrt_le_sqrt (max_le (mul_le_mul_of_nonneg_left (by linarith) hpac0.le) hC2n)
   obtain ⟨hkB1, hkB2⟩ := abs_le.1 hgB
   obtain ⟨hkR1, hkR2⟩ := abs_le.1 hgR
   have hCsB := mul_le_mul_of_nonneg_left hsB hC.le
@@ -807,8 +828,13 @@ probability at least `1 − ε`, `|B₁| ≤ n/2 − K √(n / (p p_ac))`.
 Readings: the paper writes "for every `ε ∈ (0, 1)` and `T > 0`", a misprint for `K > 0`; its proof
 takes `n` large (`n ≥ N`) and uses `(1 − p) p_ac n ≥ 10` (module docstring).
 
-Proof (Appendix B), with `c = 2` and `D = D_2/2`: `C_ε = 2/√ε`, `S_ε = 4 C_ε`,
-`M_K = max{8K/D, 2c}`, `T_ε = max{24 C_ε/D, 12/(D_2 √ε)}` (the paper: `11 ε^(−1/2)`). Taking
+Proof (Appendix B), with `c = 2` and `D = D_2/2`: `C_ε = 2 √(log(8/ε))`, `S_ε = 4 C_ε`,
+`M_K = max{8K/D, 2c}`, `T_ε = max{24 C_ε/D, 12/(D_2 √ε)}` (the paper: `11 ε^(−1/2)`). By the
+Chernoff bounds (29) and (30), the active vertices of `S ∈ {R₀, B₀}` number
+`p_ac |S| ± C_ε √(max{p_ac |S|, C_ε²})` except with probability `2 e^(−C_ε²/4) = ε/4` each. This is
+the paper's (day1-lazy-pf-bound-Vac) when `p_ac |S| ≥ C_ε²` (always for `R₀`, as `n ≥ N`); for a
+small `|B₀|`, where (29) does not give the band `C_ε √(p_ac |B₀|)`, the band is wider, which the
+proof allows: it uses the bound only through `C_ε √(p_ac n)`, as the paper does. Taking
 `n ≥ N` ("`n` sufficiently large") gives `p_ac n ≥ 100 C_ε²` (so `m ≥ 0.8 p_ac n`),
 `log n ≥ 10`, `(D/4) p_up p_ac √(p p_ac n) ≥ K + 3 C_ε` and `p_up² p_ac n ≥ 128/(ε D_2²)` (the
 paper's `p_up² p_ac n ≥ (11 ε^(−1/2))²` also needs `n` large). Proposition 2.2 is applied to the
@@ -816,10 +842,16 @@ active subgraph; its variance bound `varConst m p · m` replaces the paper's cov
 `1/(3m)` (the same argument, packaged; `varConst ≤ 2.76` for `m ≥ 3`).
 
 Departure from the paper: the paper takes `c = 10` (`D = 0.21`), which needs
-`c ≤ √(p (1 − p) m)` for the `m ≈ p_ac n` active vertices, i.e. `p (1 − p) p_ac n ≳ 100`. Under the
-hypotheses `(1 − p) p_ac n ≥ 10` and `p p_ac n ≥ (1 + λ) log n`, `p (1 − p) m` can be as small as
-about `5` when `p` is close to `1`, so `c = 10` is not admissible there; the proof takes `c = 2`
-(`p (1 − p) m ≥ 4` once `m ≥ 0.8 p_ac n` and `log n ≥ 10`), with `D_2 = Φ₀(3/2) − 0.28 > 0`. -/
+`c ≤ √(p (1 − p) m)` for the `m ≈ p_ac n` active vertices, i.e. `p (1 − p) p_ac n ≳ 100`. The
+hypotheses `(1 − p) p_ac n ≥ 10` and `p p_ac n ≥ (1 + λ) log n` allow `p` close to `1` with
+`(1 − p) p_ac n ≈ 10`, where `p (1 − p) m ≈ (1 − p) p_ac n ≈ 10`, and in general they guarantee
+only `p (1 − p) m ≳ 5`; so `c = 10` is not admissible there. The proof takes `c = 2`
+(`p (1 − p) m ≥ 4` once `m ≥ 0.8 p_ac n` and `log n ≥ 10`), with `D_2 = Φ₀(3/2) − 0.28 > 0`.
+
+Departure from the paper (a gap filled): the paper's (day1-lazy-pf-bound-Vac) claims the band
+`C_ε √(p_ac |B₀|)` "by a Chernoff bound" for both camps; when `p_ac |B₀| < C_ε²` the Chernoff upper
+tail does not give it, and the proof uses the band `C_ε √(max{p_ac |B₀|, C_ε²})`, which the rest of
+the argument allows (it uses the band only through `C_ε √(p_ac n)`). -/
 theorem proposition4_2 (hBE : ShevtsovaBerryEsseen) :
     ∃ M S T : ℝ → ℝ, ∀ ε K lam pac pup : ℝ, 0 < ε → ε < 1 → 0 < K → 0 < lam → 0 < pac →
       pac ≤ 1 → 0 < pup → pup ≤ 1 →
@@ -832,15 +864,23 @@ theorem proposition4_2 (hBE : ShevtsovaBerryEsseen) :
           ((lazyBlueAfter G c B₀ 1).ncard : ℝ) ≤ n / 2 - K * Real.sqrt (n / (p * pac))) := by
   classical
   have hD₂ : 0 < Dc 2 := lazyDayOneAux_Dc_two_pos
-  -- `c = 2`, `D = D₂/2`, `C_ε = 2/√ε`: `M_K = max{8K/D, 2c}`, `S_ε = 4 C_ε`,
+  -- `c = 2`, `D = D₂/2`, `C_ε = 2 √(log(8/ε))`: `M_K = max{8K/D, 2c}`, `S_ε = 4 C_ε`,
   -- `T_ε = max{24 C_ε/D, 12/(D₂ √ε)}` (the paper's (day1-lazy-pf-bounds), (day1-lazy-pf-bound-adv))
-  refine ⟨fun K => max (8 * K / (Dc 2 / 2)) 4, fun ε => 4 * (2 / Real.sqrt ε),
-    fun ε => max (24 * (2 / Real.sqrt ε) / (Dc 2 / 2)) (12 / (Dc 2 * Real.sqrt ε)), ?_⟩
+  refine ⟨fun K => max (8 * K / (Dc 2 / 2)) 4,
+    fun ε => 4 * (2 * Real.sqrt (Real.log (8 / ε))),
+    fun ε => max (24 * (2 * Real.sqrt (Real.log (8 / ε))) / (Dc 2 / 2))
+      (12 / (Dc 2 * Real.sqrt ε)), ?_⟩
   intro ε K lam pac pup hε0 hε1 hK hlam hpac0 hpac1 hpup0 hpup1
   have hsε : 0 < Real.sqrt ε := Real.sqrt_pos.2 hε0
-  set C := 2 / Real.sqrt ε with hC_def
+  have hlog8 : 0 < Real.log (8 / ε) := Real.log_pos (by rw [lt_div_iff₀ hε0]; linarith)
+  set C := 2 * Real.sqrt (Real.log (8 / ε)) with hC_def
   have hC : 0 < C := by positivity
-  have hC2 : C ^ 2 = 4 / ε := by rw [hC_def, div_pow, Real.sq_sqrt hε0.le]; norm_num
+  have hC2 : C ^ 2 = 4 * Real.log (8 / ε) := by
+    rw [hC_def, mul_pow, Real.sq_sqrt hlog8.le]; norm_num
+  -- the Chernoff bounds give failure probability `2 e^(−C_ε²/4) = ε/4` for each of `R₀`, `B₀`
+  have hexpC : Real.exp (-(C ^ 2 / 4)) = ε / 8 := by
+    rw [hC2, show -(4 * Real.log (8 / ε) / 4) = -Real.log (8 / ε) by ring, Real.exp_neg,
+      Real.exp_log (by positivity), inv_div]
   -- the threshold `N` ("`n` sufficiently large")
   set L : ℝ := ((K + 3 * C) / (Dc 2 / 2 / 4 * pup * pac)) ^ 2 with hL
   set N₀ : ℝ := max (max (100 * C ^ 2 / pac) (Real.exp 10))
@@ -894,9 +934,10 @@ theorem proposition4_2 (hBE : ShevtsovaBerryEsseen) :
   -- the good activations: (day1-lazy-pf-bound-Vac)
   set bound : ℝ := (n : ℝ) / 2 - K * Real.sqrt (n / (p * pac)) with hbound
   let good : (Fin n → Bool) → Prop := fun a =>
-    |((B₀ ∩ {v | a v = true}).ncard : ℝ) - pac * B₀.ncard| ≤ C * Real.sqrt (pac * B₀.ncard) ∧
+    |((B₀ ∩ {v | a v = true}).ncard : ℝ) - pac * B₀.ncard| ≤
+      C * Real.sqrt (max (pac * B₀.ncard) (C ^ 2)) ∧
     |((B₀ᶜ ∩ {v | a v = true}).ncard : ℝ) - pac * (B₀ᶜ.ncard : ℝ)| ≤
-      C * Real.sqrt (pac * (B₀ᶜ.ncard : ℝ))
+      C * Real.sqrt (max (pac * (B₀ᶜ.ncard : ℝ)) (C ^ 2))
   -- bad activations have probability at most `ε/2`
   have hbad : lazyProb n p pac pup (fun _ c => ¬ good (c 0).1) ≤ ε / 2 := by
     refine lazyProb_le_of_forall_day 0 _ (fun G c c' h => by simp only [h 0 le_rfl])
@@ -904,20 +945,20 @@ theorem proposition4_2 (hBE : ShevtsovaBerryEsseen) :
     simp only [Function.update_self]
     calc (dayLaw n pac pup).real {d | ¬ good d.1}
         ≤ (dayLaw n pac pup).real
-            ({d | C * Real.sqrt (pac * B₀.ncard) <
+            ({d | C * Real.sqrt (max (pac * B₀.ncard) (C ^ 2)) <
                 |((B₀ ∩ {v | d.1 v = true}).ncard : ℝ) - pac * B₀.ncard|} ∪
-             {d | C * Real.sqrt (pac * B₀ᶜ.ncard) <
+             {d | C * Real.sqrt (max (pac * B₀ᶜ.ncard) (C ^ 2)) <
                 |((B₀ᶜ ∩ {v | d.1 v = true}).ncard : ℝ) - pac * B₀ᶜ.ncard|}) := by
           refine measureReal_mono (fun d hd => ?_) (measure_ne_top _ _)
           simp only [Set.mem_ofPred_eq, Set.mem_union] at hd ⊢
           by_contra h
           push Not at h
           exact hd ⟨h.1, h.2⟩
-      _ ≤ 1 / C ^ 2 + 1 / C ^ 2 :=
+      _ ≤ 2 * Real.exp (-(C ^ 2 / 4)) + 2 * Real.exp (-(C ^ 2 / 4)) :=
           (measureReal_union_le _ _).trans
             (add_le_add (lazyDayOneAux_act_dev hpac0 hpac1 B₀ hC)
               (lazyDayOneAux_act_dev hpac0 hpac1 B₀ᶜ hC))
-      _ = ε / 2 := by rw [hC2]; field_simp; ring
+      _ = ε / 2 := by rw [hexpC]; ring
   -- good activations and a large `|B₁|` have probability at most `ε/2`
   have hgood : lazyProb n p pac pup (fun G c => good (c 0).1 ∧
       ¬ ((lazyBlueAfter G c B₀ 1).ncard : ℝ) ≤ bound) ≤ ε / 2 := by
