@@ -39,20 +39,21 @@ How it was made:
   [`Solution.lean`](Solution.lean) and Comparator, and three cleanup rounds.
 - **Audit:** the findings, verified by an independent agent against the TeX; the literature search
   and its independent verification; the report and its independent check.
-- **Follow-up papers:** a research agent and a second reader (the private `NEXT.md`).
+- **Follow-up papers:** a research agent and a second reader (the private `NEXT.md`). The second
+  reader also obtained B. Tran's thesis; the coordinator checked it, and the sparse paper's arXiv v1,
+  against the report and corrected its literature section (commit `b0d1f95`).
 
 Figures, from 2026-10-17 07:09:52 CDT (UTC−05:00) to the commit that completes [`REPORT.md`](REPORT.md):
 
-- **Elapsed time:** 5.6 hours (07:09:52 to 12:43:25 CDT on 2026-10-17), to commit `462f7d4`.
+- **Elapsed time:** 6.2 hours (07:09:52 to 13:21:14 CDT on 2026-10-17), to commit `b0d1f95`.
 - **Sub-agents:** 34 (26 launched by the coordinating session, 8 by sub-agents), at most 17
-  running at once; their total working time was 19.6 hours. Two finished sub-agents were resumed.
-- **Tool calls and tokens:** sub-agents 3,453 tool calls, 6.49M output tokens, 15.58M input tokens
-  (uncached input and cache writes) and 808M cache reads; the coordinating session 492 tool calls,
-  1.05M output tokens, 1.85M input tokens and 244M cache reads.
-- **Model calls:** `claude-opus-5-5`, 454 by the coordinating session and 3,246 by sub-agents.
+  running at once; their total working time was 20.4 hours. Two finished sub-agents were resumed.
+- **Tool calls and tokens:** sub-agents 3,561 tool calls, 6.59M output tokens, 17.19M input tokens
+  (uncached input and cache writes) and 848M cache reads; the coordinating session 586 tool calls,
+  1.14M output tokens, 2.12M input tokens and 264M cache reads.
+- **Model calls:** `claude-opus-5-5`, 539 by the coordinating session and 3,344 by sub-agents.
 
 The figures come from the Claude Code transcripts of the session and its sub-agents
 (`session_stats.py` of the skill, with `--until` at that commit). They include the sub-agents that
-agents launched themselves, and the part of the follow-up search that ran before the commit. The
-user's three decisions at the start took a few minutes; there were no other pauses. Spending in
-money was not tracked.
+agents launched themselves, and the follow-up search. The user's three decisions at the start took
+a few minutes; there were no other pauses. Spending in money was not tracked.

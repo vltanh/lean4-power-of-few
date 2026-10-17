@@ -137,7 +137,7 @@ automation:
         independent reviewers of the statements, of the proofs, of the findings, of the literature and
         of the report, and literature and follow-up searches.
       cost:
-        wall_time: "5.6 h elapsed (2026-10-17, 07:10 to 12:43 CDT, to the commit completing REPORT.md); 19.6 h of sub-agent working time"
+        wall_time: "6.2 h elapsed (2026-10-17, 07:10 to 13:21 CDT, to the commit completing REPORT.md); 20.4 h of sub-agent working time"
         spend_usd: "not tracked"
         hardware: "local machine (20 CPUs, 62 GB RAM) for the Lean builds; models through the Anthropic API"
       prompting_notes: >-
