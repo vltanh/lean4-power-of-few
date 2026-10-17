@@ -638,7 +638,7 @@ day 2 on, the proof needs `|B_t| ≤ n/4` for every `t ≥ 2`; the paper does no
 gets it from the paper's own dichotomy (Blue halves while it has at least `n^(λ+δ)` vertices, and
 `n^(λ+δ) ≤ n/4`). The failure probability of the average-degree event is the one Lemma A.5 gives,
 `n^(−δ n^(λ+δ)/2)`, where the paper writes `e^(−Ω(n^λ))`. -/
-theorem theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem theorem3_1 (hBE : ShevtsovaBerryEsseen)
     {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam < 1) :
     ∃ C K : ℝ, ∀ (n : ℕ) (B₀ : Set (Fin n)),
       10 ≤ (1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) →
@@ -662,7 +662,7 @@ theorem theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : B
   obtain ⟨κ, hκ, N₁, hN₁⟩ := lemma2_4 (a := 2.1) (b := 1 / 4) (by norm_num) (by norm_num)
     (by norm_num) hab
   -- The spectral bound: Lemma A.7 with `c = a = 1 − λ`.
-  obtain ⟨CA, hCA⟩ := lemmaA_7 hBBK hBLM hl1 hl1
+  obtain ⟨CA, hCA⟩ := lemmaA_7 hl1 hl1
   -- The average degree of large sets: Lemma A.5.
   obtain ⟨N₂, hN₂⟩ := lemmaA_5 hlam0 hlam1
   -- `M = 12 (C + 1)²`, where `12 = (1 − b)/(1/2 − b)²` for `b = 1/4` in Lemma 2.5.

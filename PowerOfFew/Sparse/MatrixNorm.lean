@@ -1,14 +1,18 @@
 module
 
 public import PowerOfFew.Model.Gnp
+public import PowerOfFew.External.RandomMatrix.RandomMatrix
+public import PowerOfFew.External.FeigeOfek.FeigeOfek
 
 /-!
 # Sparse paper, Appendix A: the spectral norm of `A − E A`
 
-Lemma A.7 of the sparse paper, derived as the paper does from two cited results that the
-formalization assumes: Theorem 3.2 of Benaych-Georges–Bordenave–Knowles for the expectation
-(`BBKTheorem3_2`) and Theorem 6.10 of Boucheron–Lugosi–Massart for the concentration
-(`BLMTheorem6_10`).
+Lemma A.7 of the sparse paper. The paper derives it from two cited results: Theorem 3.2 of
+Benaych-Georges–Bordenave–Knowles for the expectation (`BBKTheorem3_2`) and Theorem 6.10 of
+Boucheron–Lugosi–Massart for the concentration (`BLMTheorem6_10`). That derivation is formalized
+here, with the two results as hypotheses (`lemmaA_7_of_bbk_blm`). The library proves Lemma A.7
+itself by Feige and Ofek's argument (`lemmaA_7`, from `PowerOfFew.FeigeOfek.feigeOfek`), so no
+result of the library assumes the two cited results.
 
 Reading: the paper quotes the first with `d = p(1 − p)(n − 1)` and `η = √(log n)/min{√d, n^0.1}`;
 the cited theorem has `d = p(n − 1)` (the maximal expected degree) and
@@ -351,10 +355,11 @@ private theorem appAux_concentration (hBLM : BLMTheorem6_10) {n : ℕ} {p : ℝ}
   rw [h3]
   exact mul_lt_mul_of_pos_left hω (inv_pos.mpr hs2)
 
-/-- **Lemma A.7** (`S:lem:matrix-norm-bound`). Let `c, a > 0` be constants and assume
-`pn ≥ c log n`. With probability at least `1 − n^(−a)`, the adjacency matrix `A` of
-`G ∼ G(n, p)` satisfies `‖A − E A‖_op ≤ C_{c,a} √(pn)`, for a constant `C_{c,a}` depending only
-on `c` and `a`.
+/-- **The paper's proof of Lemma A.7**, from its two cited results as hypotheses: if Theorem 3.2
+of Benaych-Georges–Bordenave–Knowles and Theorem 6.10 of Boucheron–Lugosi–Massart hold, then
+for `c, a > 0` and `pn ≥ c log n`, with probability at least `1 − n^(−a)`,
+`‖A − E A‖_op ≤ C_{c,a} √(pn)`. The library's `lemmaA_7` is proved by Feige and Ofek's argument
+instead; this theorem checks the paper's derivation.
 
 Proof (the paper's): Theorem 3.2 of BBK bounds `E‖A − E A‖ ≤ (2 + Cη)√d ≤ (2 + C M_c)√(pn)`,
 and Theorem 6.10 of BLM for the convex `1`-Lipschitz function `x ↦ 2^(−1/2) ‖Z(x) − E A‖` of the
@@ -370,8 +375,8 @@ Departures from the paper (minimal repairs):
 * Theorem 3.2 of BBK needs `q ≥ 1`, which holds for `n ≥ N(c) = max(1024, ⌈e^(2/c)⌉)`; for
   `2 ≤ n < N(c)`, `‖A − E A‖ ≤ ‖A − E A‖_F ≤ n` and `√(pn) ≥ √(c log 2)`, so the constant
   `N(c)/√(c log 2)` covers these `n` (and `n ≤ 1` is trivial). -/
-theorem lemmaA_7 (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) {c a : ℝ} (hc : 0 < c)
-    (ha : 0 < a) :
+theorem lemmaA_7_of_bbk_blm (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) {c a : ℝ}
+    (hc : 0 < c) (ha : 0 < a) :
     ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 → c * Real.log n ≤ p * n →
       1 - (n : ℝ) ^ (-a) ≤
         gnpProb n p (fun G => specNorm (adjMat G - meanAdj n p) ≤ C * Real.sqrt (p * n)) := by
@@ -470,6 +475,26 @@ theorem lemmaA_7 (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) {c a : ℝ} (hc 
   · rw [Real.sq_sqrt (by positivity), Real.rpow_def_of_pos hnpos]
     congr 1
     ring
+
+/-- **Lemma A.7** (`S:lem:matrix-norm-bound`). Let `c, a > 0` be constants and assume
+`pn ≥ c log n`. With probability at least `1 − n^(−a)`, the adjacency matrix `A` of
+`G ∼ G(n, p)` satisfies `‖A − E A‖_op ≤ C_{c,a} √(pn)`, for a constant `C_{c,a}` depending only
+on `c` and `a`.
+
+Departure from the paper (the whole argument, at the author's request): the paper derives the
+bound from Theorem 3.2 of Benaych-Georges–Bordenave–Knowles (the expectation) and Theorem 6.10 of
+Boucheron–Lugosi–Massart (Talagrand's concentration inequality); that derivation is
+`lemmaA_7_of_bbk_blm`, with the two results as hypotheses. Their proofs need mathematics that Lean
+lacks (a moment method for the non-backtracking matrix with an Ihara–Bass type formula; the entropy
+method for separately convex Lipschitz functions), so the formalization proves the bound by Feige
+and Ofek's argument (`PowerOfFew.FeigeOfek.feigeOfek`: a net of the unit ball, the light pairs by
+an exponential-moment bound, the heavy pairs by bounded degrees and discrepancy, all from Chernoff
+bounds). -/
+theorem lemmaA_7 {c a : ℝ} (hc : 0 < c) (ha : 0 < a) :
+    ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 → c * Real.log n ≤ p * n →
+      1 - (n : ℝ) ^ (-a) ≤
+        gnpProb n p (fun G => specNorm (adjMat G - meanAdj n p) ≤ C * Real.sqrt (p * n)) :=
+  FeigeOfek.feigeOfek hc ha
 
 end PowerOfFew.Sparse
 

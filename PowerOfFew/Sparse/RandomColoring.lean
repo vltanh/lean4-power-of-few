@@ -82,7 +82,7 @@ threshold constant `1`: `pn ≥ λ√n ≥ 2 log n`) makes the majority side win
 Departure from the paper: Theorem 1.2 assumes `pn ≤ n − 10`. When `pn > n − 10` (which the paper's
 proof does not treat), the majority side, ahead by `2Δ ≥ 2C_ε λ` vertices, wins within two days
 with probability at least `1 − 40/(2C_ε λ − 1) − 2048/n` (`colorAux_nearComplete`). -/
-theorem theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem theorem1_4 (hBE : ShevtsovaBerryEsseen)
     {ε : ℝ} (hε : 0 < ε) :
     ∃ lam : ℝ, 0 < lam ∧ ∃ T : ℕ, ∀ (n : ℕ) (p : ℝ), lam ≤ p * Real.sqrt n → p ≤ 1 →
       1 - ε ≤ coloredProb n p (1 / 2) (fun G B₀ =>
@@ -93,7 +93,7 @@ theorem theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : B
   · obtain ⟨lam, hlam, T, h⟩ := this one_pos le_rfl
     exact ⟨lam, hlam, T, fun n p h1 h2 => le_trans (by linarith) (h n p h1 h2)⟩
   -- Theorem 1.2, with the threshold constant `1` (`pn ≥ λ√n ≥ 2 log n`)
-  obtain ⟨C, K, hmain⟩ := theorem1_2 hBE hBBK hBLM (lam := 1) one_pos
+  obtain ⟨C, K, hmain⟩ := theorem1_2 hBE (lam := 1) one_pos
   set C' := max C 1 with hC'
   -- the gap constant `C_ε` of the paper
   set c' : ℝ := ε / 8 with hc'
@@ -275,13 +275,13 @@ two terms that tend to `0` with `n`).
 Departure from the paper: Theorem 1.2 assumes `pn ≤ n − 10`. When `pn > n − 10` (which the paper's
 proof does not treat), Red, ahead by `2Δ ≥ δn ≥ g` vertices, wins within two days with probability
 at least `1 − 40/(g − 1) − 2048/n` (`colorAux_nearComplete`). -/
-theorem theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem theorem1_5 (hBE : ShevtsovaBerryEsseen)
     {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ} (hp0 : ∀ n, 0 < p n) (hp1 : ∀ n, p n ≤ 1)
     (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n) (hq : ∀ n, q n ≤ 1)
     (hbias : Tendsto (fun n : ℕ => (q n - 1 / 2) * min (p n * n) (Real.sqrt n)) atTop atTop) :
     Tendsto (fun n : ℕ =>
       coloredProb n (p n) (q n) (fun G B₀ => ∃ t, blueAfter G B₀ t = ∅)) atTop (𝓝 1) := by
-  obtain ⟨C, K, hmain⟩ := theorem1_2 hBE hBBK hBLM hlam
+  obtain ⟨C, K, hmain⟩ := theorem1_2 hBE hlam
   set C' := max C 1 with hC'
   -- `g n = (q n − 1/2) min{pn, √n} → ∞`
   set g : ℕ → ℝ := fun n => (q n - 1 / 2) * min (p n * n) (Real.sqrt n) with hg

@@ -20,10 +20,9 @@ constants (Comparator compares them). This module imports exactly what the Chall
 * Random initial colourings (sparse paper, Theorems 1.4 and 1.5): `coloredGnp`.
 * The normal distribution function `Φ` and `Φ₀(a) = Φ(a) − 1/2`.
 * The functions `F, P₁, …, P₄` of the dense paper's Theorem 1.6 (journal version).
-* The cited results that the formalization assumes, as propositions named after their sources:
-  the Berry–Esseen inequality with Shevtsova's constant `0.56`, Theorem 3.2 of
-  Benaych-Georges–Bordenave–Knowles for `G(n, p)`, and Theorem 6.10 of
-  Boucheron–Lugosi–Massart. See `PowerOfFew/External/*/README.md`.
+* The cited result that the formalization assumes, as a proposition named after its source:
+  the Berry–Esseen inequality with Shevtsova's constant `0.56`
+  (`PowerOfFew/External/BerryEsseen/README.md`).
 -/
 
 @[expose] public section
@@ -178,41 +177,6 @@ def meanAdj (n : ℕ) (p : ℝ) : Matrix (Fin n) (Fin n) ℝ :=
 /-- The spectral norm (the `ℓ² → ℓ²` operator norm) of a square real matrix. -/
 def specNorm {n : ℕ} (M : Matrix (Fin n) (Fin n) ℝ) : ℝ :=
   ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) M‖
-
-/-- **Benaych-Georges–Bordenave–Knowles**, *Spectral radii of sparse random matrices*
-(Ann. Inst. H. Poincaré Probab. Statist. 56, 2020; arXiv:1704.02945), Theorem 3.2, for the
-homogeneous Erdős–Rényi graph `G(n, p)` (`p_ij = p` for `i ≠ j`): there is a universal constant
-`C > 0` such that, with `d = p(n − 1)` (the maximal expected degree),
-`κ = p / (d / n)`, `q = √d ∧ n^(1/10) κ^(-1/9)` and `η = √(log n) / q`, if `q ≥ 1` then
-`E‖A − EA‖ / √d ≤ 2 + C η / √(1 ∨ log η)`. Assumed, not proved (the sparse paper uses it in
-Lemma A.7). -/
-def BBKTheorem3_2 : Prop :=
-  ∃ C : ℝ, 0 < C ∧ ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 →
-    let d : ℝ := p * (n - 1)
-    let κ : ℝ := p / (d / n)
-    let q : ℝ := min (Real.sqrt d) ((n : ℝ) ^ (1 / 10 : ℝ) * κ ^ (-(1 / 9 : ℝ)))
-    let η : ℝ := Real.sqrt (Real.log n) / q
-    1 ≤ q →
-      (∫ G, specNorm (adjMat G - meanAdj n p) ∂(SimpleGraph.binomialRandom (Fin n) (toUnit p))) /
-          Real.sqrt d ≤
-        2 + C * η / Real.sqrt (max 1 (Real.log η))
-
-/-- **Boucheron–Lugosi–Massart**, *Concentration Inequalities* (Oxford, 2013), Theorem 6.10: let
-`X₁, …, X_N` be independent random variables with values in `[0, 1]`, and `f : [0, 1]^N → ℝ` a
-separately convex function with `|f(x) − f(y)| ≤ ‖x − y‖` (Euclidean norm) on `[0, 1]^N`. Then
-`Z = f(X₁, …, X_N)` satisfies `P{Z > EZ + t} ≤ e^(−t²/2)` for all `t > 0`. Assumed, not proved
-(the sparse paper uses it in Lemma A.7). -/
-def BLMTheorem6_10 : Prop :=
-  ∀ (Ω : Type) [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ] (N : ℕ)
-    (X : Fin N → Ω → ℝ) (f : (Fin N → ℝ) → ℝ),
-    (∀ i, Measurable (X i)) → iIndepFun X μ → (∀ i ω, X i ω ∈ Set.Icc (0 : ℝ) 1) →
-    (∀ (x : Fin N → ℝ) (i : Fin N), (∀ j, x j ∈ Set.Icc (0 : ℝ) 1) →
-      ConvexOn ℝ (Set.Icc (0 : ℝ) 1) fun s => f (Function.update x i s)) →
-    (∀ x y : Fin N → ℝ, (∀ j, x j ∈ Set.Icc (0 : ℝ) 1) → (∀ j, y j ∈ Set.Icc (0 : ℝ) 1) →
-      |f x - f y| ≤ Real.sqrt (∑ j, (x j - y j) ^ 2)) →
-    ∀ t : ℝ, 0 < t →
-      μ.real {ω | (∫ ω', f (fun j => X j ω') ∂μ) + t < f (fun j => X j ω)} ≤
-        Real.exp (-t ^ 2 / 2)
 
 end PowerOfFew
 

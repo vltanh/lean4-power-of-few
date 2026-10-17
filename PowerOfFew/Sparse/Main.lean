@@ -229,7 +229,7 @@ The rest is the paper's argument: Lemma 2.1 with `D = 0.21`, Lemma 2.4 with `b =
 fixed `a = 2.1 ≤ D min{√(pn), pΔ}` (the paper's `a = D min{√(pn), pΔ}`; for `pn ≥ 100` the set
 `|B₁| ≤ n/2 − D min{n, Δ√(pn)}` lies inside `|B₁| ≤ n/2 − 2.1 n/√(pn)`), then Lemma 2.6 with
 `b = 1/4`; small `n` are absorbed into the constant. -/
-theorem theorem1_2 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem theorem1_2 (hBE : ShevtsovaBerryEsseen)
     {lam : ℝ} (hlam : 0 < lam) :
     ∃ C K : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
       p * n ≤ (n : ℝ) - 10 → (1 + lam) * Real.log n ≤ p * n →
@@ -245,7 +245,7 @@ theorem theorem1_2 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : B
   obtain ⟨κ, hκ, N₂, h24⟩ := lemma2_4 (a := 2.1) (b := 1 / 4) (by norm_num) (by norm_num)
     (by norm_num) hab
   -- Step 3: Lemma 2.6 with `b = 1/4`
-  obtain ⟨K₆, N₆, h26⟩ := lemma2_6 hBBK hBLM (b := 1 / 4) hlam (by norm_num) (by norm_num)
+  obtain ⟨K₆, N₆, h26⟩ := lemma2_6 (b := 1 / 4) hlam (by norm_num) (by norm_num)
   -- Step 1: Lemma 2.1 with `c = 3` and `D = 0.21 < D₃`
   have hD3 : (0.21 : ℝ) < Dc 3 := mainAux_Dc_three
   -- `n` is large when `n ≥ N`

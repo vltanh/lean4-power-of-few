@@ -13,7 +13,10 @@ family of independent Bernoulli(`p`) variables and `m = #s` (so `Z ∼ Bin(m, p)
   `D(a ‖ p) = a log(a / p) + (1 − a) log((1 − a) / (1 − p))` (sparse paper, proof of Lemma A.4);
 * `IsBernoulliFamily.measureReal_sum_ge_le_exp`, `IsBernoulliFamily.measureReal_sum_le_le_exp`:
   `P(Z ≥ T) ≤ exp(−(T − pm)² / (2T))` for `T > pm` and `P(Z ≤ T) ≤ exp(−(pm − T)² / (2pm))` for
-  `T < pm` (sparse paper, proof of Lemma A.6, its equations (29) and (30)).
+  `T < pm` (sparse paper, proof of Lemma A.6, its equations (29) and (30));
+* `IsBernoulliFamily.measureReal_sum_ge_le_exp_mul_log`: the upper tail
+  `P(Z ≥ k) ≤ (e p m / k)^k` for `k > 0`, used by Feige and Ofek's argument
+  (`PowerOfFew.FeigeOfek`) for the degrees and the discrepancy of `G(n, p)`.
 -/
 
 @[expose] public section
@@ -334,6 +337,16 @@ theorem measureReal_sum_le_le_exp (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p
               = s.card * ((p - T / s.card) ^ 2 / (2 * p)) := by
                 field_simp
             _ ≤ s.card * klBern (T / s.card) p := by gcongr
+
+/-- The upper tail in the form `P(Z ≥ k) ≤ (e p m / k)^k` for `k > 0`, where `m = #s`, written
+`exp(−k log(k / (e p m)))`: Markov's inequality for `e^(θ Z)` with `θ = log(k / (p m))`, and
+`E e^(θ Z) = (1 − p + p e^θ)^m ≤ exp(p m (e^θ − 1))`. (When `k ≤ e p m` or `p m = 0`, the
+right-hand side is at least `1`.) -/
+theorem measureReal_sum_ge_le_exp_mul_log (hX : IsBernoulliFamily μ p X) (hp0 : 0 ≤ p)
+    (hp1 : p ≤ 1) (s : Finset ι) {k : ℝ} (hk : 0 < k) :
+    μ.real {ω | k ≤ ∑ i ∈ s, X i ω} ≤
+      Real.exp (-(k * Real.log (k / (Real.exp 1 * (p * s.card))))) := by
+  sorry
 
 end IsBernoulliFamily
 

@@ -214,7 +214,7 @@ Correction: the printed theorem has no hypothesis on `p_ac^(1/2) Δ / n^(1/2)` a
 those of Proposition 4.2; the printed `O(1/(p_up² p_ac² min{n, p p_ac Δ²}))` was the Chebyshev part
 of that `ε`, and the printed `e^(−Ω(p_up² p_ac⁴ p Δ²))` is Proposition 4.3's `e^(−Ω(K² p⁻¹))` with
 `K` free. The hypothesis `(1 − p) p_ac n ≥ 10` is the one the propositions' proofs use. -/
-theorem theorem4_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
+theorem theorem4_1 (hBE : ShevtsovaBerryEsseen) :
     ∃ (M S : ℝ → ℝ) (A c₁ : ℝ), 0 < c₁ ∧ ∀ ε K lam : ℝ, 0 < ε → ε < 1 → 8 ≤ K → 0 < lam →
       ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ pac pup : ℝ, 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
       ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
@@ -227,7 +227,7 @@ theorem theorem4_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : B
             (t : ℝ) ≤ A * Real.log n / (pup * pac) ∧ lazyBlueAfter G c B₀ t = ∅) := by
   classical
   obtain ⟨M₂, S₂, T₂, h42⟩ := proposition4_2 hBE
-  obtain ⟨A₃, c₁, hc₁, h43⟩ := proposition4_3 hBBK hBLM
+  obtain ⟨A₃, c₁, hc₁, h43⟩ := proposition4_3
   obtain ⟨A₄, C₄, h44⟩ := proposition4_4
   refine ⟨M₂, fun ε => max (S₂ ε) 1, max A₃ 1 + max A₄ 0 + 2, c₁, hc₁, ?_⟩
   intro ε K lam hε0 hε1 hK hlam
@@ -331,7 +331,7 @@ unanimity is reached within time `O(log n)` with probability at least
 
 Correction: the printed theorem (with its misprint `n⁻¹ log n` corrected) has neither the
 hypothesis `Δ ≥ S n^(1/2)` nor the term `ε`, and is false (`theorem1_7_printed_false`). -/
-theorem theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem theorem1_7 (hBE : ShevtsovaBerryEsseen)
     {pac pup : ℝ} (hpac0 : 0 < pac) (hpac1 : pac ≤ 1) (hpup0 : 0 < pup) (hpup1 : pup ≤ 1)
     {lam : ℝ} (hlam : 0 < lam) {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1) :
     ∃ C S A C' c : ℝ, 0 < c ∧ ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
@@ -340,7 +340,7 @@ theorem theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : B
       1 - ε - C' * (n : ℝ) ^ (-(lam / 4)) - (n : ℝ) ^ (-c) ≤
         lazyProb n p pac pup (fun G c' => ∃ t : ℕ,
           (t : ℝ) ≤ A * Real.log n ∧ lazyBlueAfter G c' B₀ t = ∅) := by
-  obtain ⟨M, S, A, c₁, hc₁, h41⟩ := theorem4_1 hBE hBBK hBLM
+  obtain ⟨M, S, A, c₁, hc₁, h41⟩ := theorem4_1 hBE
   -- `K ≥ 8` with `e^(−c₁ K²) ≤ ε / 2`
   have hK8 : (8 : ℝ) ≤ max 8 (Real.log (2 / ε) / c₁) := le_max_left _ _
   obtain ⟨c₂, hc₂, h41ε⟩ := h41 (ε / 2) (max 8 (Real.log (2 / ε) / c₁)) lam (by positivity)

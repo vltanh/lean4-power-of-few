@@ -84,35 +84,32 @@ theorem dense_theorem1_3 (hBE : ShevtsovaBerryEsseen) {p : ℝ} (hp0 : 0 < p) (h
   PowerOfFew.Dense.theorem1_3 hBE hp0 hp1
 
 /-- Sparse paper, **Theorem 1.2** (the power of few for sparse graphs). -/
-theorem sparse_theorem1_2 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) :
+theorem sparse_theorem1_2 (hBE : ShevtsovaBerryEsseen) {lam : ℝ} (hlam : 0 < lam) :
     ∃ C K : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
       p * n ≤ (n : ℝ) - 10 → (1 + lam) * Real.log n ≤ p * n →
       10 ≤ p * ((n : ℝ) / 2 - B₀.ncard) →
       1 - C * (1 / min (n : ℝ) (p * ((n : ℝ) / 2 - B₀.ncard) ^ 2) + (n : ℝ) ^ (-(lam / 2))) ≤
         gnpProb n p (fun G => ∃ t : ℕ,
           (t : ℝ) ≤ K * (Real.log n / Real.log (p * n)) ∧ blueAfter G B₀ t = ∅) :=
-  PowerOfFew.Sparse.theorem1_2 hBE hBBK hBLM hlam
+  PowerOfFew.Sparse.theorem1_2 hBE hlam
 
 /-- Sparse paper, **Theorem 1.4** (a delayed version of the theorem of Fountoulakis, Kang and
 Makai). -/
-theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {ε : ℝ} (hε : 0 < ε) :
+theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) {ε : ℝ} (hε : 0 < ε) :
     ∃ lam : ℝ, 0 < lam ∧ ∃ T : ℕ, ∀ (n : ℕ) (p : ℝ), lam ≤ p * Real.sqrt n → p ≤ 1 →
       1 - ε ≤ coloredProb n p (1 / 2) (fun G B₀ =>
         ((B₀.ncard : ℝ) < n / 2 ∧ blueAfter G B₀ T = ∅) ∨
           ((n : ℝ) / 2 < B₀.ncard ∧ blueAfter G B₀ T = Set.univ)) :=
-  PowerOfFew.Sparse.theorem1_4 hBE hBBK hBLM hε
+  PowerOfFew.Sparse.theorem1_4 hBE hε
 
 /-- Sparse paper, **Theorem 1.5**, corrected (bias `ω(max{(pn)⁻¹, n^(−1/2)})`). -/
-theorem sparse_theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ} (hp0 : ∀ n, 0 < p n)
-    (hp1 : ∀ n, p n ≤ 1) (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n)
-    (hq : ∀ n, q n ≤ 1)
+theorem sparse_theorem1_5 (hBE : ShevtsovaBerryEsseen) {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ}
+    (hp0 : ∀ n, 0 < p n) (hp1 : ∀ n, p n ≤ 1)
+    (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n) (hq : ∀ n, q n ≤ 1)
     (hbias : Tendsto (fun n : ℕ => (q n - 1 / 2) * min (p n * n) (Real.sqrt n)) atTop atTop) :
     Tendsto (fun n : ℕ =>
       coloredProb n (p n) (q n) (fun G B₀ => ∃ t, blueAfter G B₀ t = ∅)) atTop (𝓝 1) :=
-  PowerOfFew.Sparse.theorem1_5 hBE hBBK hBLM hlam hp0 hp1 hlog hq hbias
+  PowerOfFew.Sparse.theorem1_5 hBE hlam hp0 hp1 hlog hq hbias
 
 /-- Sparse paper, **Theorem 1.5** as printed (bias `ω((pn)⁻¹)`) is false. -/
 theorem sparse_theorem1_5_printed_false :
@@ -124,8 +121,8 @@ theorem sparse_theorem1_5_printed_false :
   PowerOfFew.Sparse.theorem1_5_printed_false
 
 /-- Sparse paper, **Theorem 3.1** (below the connectivity threshold). -/
-theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam < 1) :
+theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) {lam : ℝ} (hlam0 : 0 < lam)
+    (hlam1 : lam < 1) :
     ∃ C K : ℝ, ∀ (n : ℕ) (B₀ : Set (Fin n)),
       10 ≤ (1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) →
       1 - C * (1 / min (n : ℝ) ((1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) ^ 2) +
@@ -138,10 +135,10 @@ theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
             Real.log n ^ (K * Real.sqrt (Real.log n)) * (n : ℝ) ^ lam ∧
           ∑ᶠ v ∈ blueAfter G B₀ t₀, (degree G v : ℝ) ≤
             K * Real.sqrt ((1 - lam) * Real.log n) * (blueAfter G B₀ t₀).ncard) :=
-  PowerOfFew.Sparse.theorem3_1 hBE hBBK hBLM hlam0 hlam1
+  PowerOfFew.Sparse.theorem3_1 hBE hlam0 hlam1
 
 /-- Sparse paper, **Theorem 1.7**, corrected (random activations and updates). -/
-theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen)
     {pac pup : ℝ} (hpac0 : 0 < pac) (hpac1 : pac ≤ 1) (hpup0 : 0 < pup) (hpup1 : pup ≤ 1)
     {lam : ℝ} (hlam : 0 < lam) {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1) :
     ∃ C S A C' c : ℝ, 0 < c ∧ ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
@@ -150,10 +147,10 @@ theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (h
       1 - ε - C' * (n : ℝ) ^ (-(lam / 4)) - (n : ℝ) ^ (-c) ≤
         lazyProb n p pac pup (fun G c' => ∃ t : ℕ,
           (t : ℝ) ≤ A * Real.log n ∧ lazyBlueAfter G c' B₀ t = ∅) :=
-  PowerOfFew.Sparse.theorem1_7 hBE hBBK hBLM hpac0 hpac1 hpup0 hpup1 hlam hε0 hε1
+  PowerOfFew.Sparse.theorem1_7 hBE hpac0 hpac1 hpup0 hpup1 hlam hε0 hε1
 
 /-- Sparse paper, **Theorem 4.1**, corrected. -/
-theorem sparse_theorem4_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
+theorem sparse_theorem4_1 (hBE : ShevtsovaBerryEsseen) :
     ∃ (M S : ℝ → ℝ) (A c₁ : ℝ), 0 < c₁ ∧ ∀ ε K lam : ℝ, 0 < ε → ε < 1 → 8 ≤ K → 0 < lam →
       ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ pac pup : ℝ, 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
       ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
@@ -164,7 +161,7 @@ theorem sparse_theorem4_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (h
             (n : ℝ) ^ (-(c₂ * pup * pac)) ≤
           lazyProb n p pac pup (fun G c => ∃ t : ℕ,
             (t : ℝ) ≤ A * Real.log n / (pup * pac) ∧ lazyBlueAfter G c B₀ t = ∅) :=
-  PowerOfFew.Sparse.theorem4_1 hBE hBBK hBLM
+  PowerOfFew.Sparse.theorem4_1 hBE
 
 /-- Sparse paper, **Theorem 1.7** as printed fails along one sequence. -/
 theorem sparse_theorem1_7_printed_false_seq :

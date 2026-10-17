@@ -7,8 +7,7 @@ public import PowerOfFew.Sparse.MatrixNorm
 # Sparse paper, Section 2.4: Step 3, the third day onwards
 
 Lemma 2.5 (deterministic, spectral) and Lemma 2.6 of the sparse paper. Lemma 2.6 uses the spectral
-bound of Lemma A.7, hence the assumed results `BBKTheorem3_2` and `BLMTheorem6_10`, and the minimum
-degree bound of Lemma A.4.
+bound of Lemma A.7 and the minimum degree bound of Lemma A.4.
 -/
 
 @[expose] public section
@@ -392,14 +391,14 @@ Departure from the paper (an off-by-one in the number of days): the paper stops 
 when `log_{pn/A}(b n)` is an integer. The proof here runs `⌊log_{pn/A}(b n)⌋ + 1` days, after which
 `|B_T| < 1`. It takes `n` large enough that `log n ≥ A² + 1`, so that `pn/A ≥ √(pn)` and the number
 of days is at most `3 log n / log(pn)`, and it replaces `A` by `max{A, 1}`. -/
-theorem lemma2_6 (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) {lam b : ℝ} (hlam : 0 < lam)
+theorem lemma2_6 {lam b : ℝ} (hlam : 0 < lam)
     (hb0 : 0 ≤ b) (hb : b < 1 / 2) :
     ∃ K : ℝ, ∃ N : ℕ, ∀ n ≥ N, ∀ p : ℝ, 0 < p → p ≤ 1 → (1 + lam) * Real.log n ≤ p * n →
       1 - 2 * (n : ℝ) ^ (-(lam / 2)) ≤ gnpProb n p (fun G => ∀ B : Set (Fin n),
         (B.ncard : ℝ) ≤ b * n →
           ∃ t : ℕ, (t : ℝ) ≤ K * (Real.log n / Real.log (p * n)) ∧ blueAfter G B t = ∅) := by
   -- Lemma A.7 with `c = 1 + λ`, `a = λ`, and Lemma A.4 with `ε = λ`, `α = α_λ = e^{−(8/λ + 7)}`
-  obtain ⟨C, hC⟩ := lemmaA_7 hBBK hBLM (c := 1 + lam) (a := lam) (by linarith) hlam
+  obtain ⟨C, hC⟩ := lemmaA_7 (c := 1 + lam) (a := lam) (by linarith) hlam
   have hα0 : 0 < Real.exp (-(8 / lam + 7)) := Real.exp_pos _
   -- `A ≥ (C + 1)² (1 − b) / (α² (1/2 − b)²)`, taken at least `1`
   obtain ⟨A, hA1, hA⟩ : ∃ A : ℝ, 1 ≤ A ∧

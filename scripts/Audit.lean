@@ -5,19 +5,28 @@ public meta import Lean.DocString
 -- One `import all` line per module of the libraries, so that proofs are visible to the dependency
 -- traversal (the module system hides them from a plain `import`). Generate the lines with
 --   find PowerOfFew Basic -name '*.lean' | sort | sed 's/\.lean$//; s#/#.#g; s/^/import all /'
+import all Basic.Analysis.GridNet
 import all Basic.Analysis.SpecialFunctions.CubeRoot
 import all Basic.Analysis.SpecialFunctions.ExpLog
 import all Basic.Combinatorics.Choose
 import all Basic.Probability.BernoulliFamily
 import all Basic.Probability.Chernoff
 import all Basic.Probability.Concentration
+import all Basic.Probability.WeightedBernoulli
 import all PowerOfFew.Defs
 import all PowerOfFew.Dense.Appendix
 import all PowerOfFew.Dense.BinomialDifference
 import all PowerOfFew.Dense.DayOne
 import all PowerOfFew.Dense.Main
 import all PowerOfFew.Dense.Shrinking
+import all PowerOfFew.External.FeigeOfek.Defs
+import all PowerOfFew.External.FeigeOfek.FeigeOfek
+import all PowerOfFew.External.FeigeOfek.Heavy
+import all PowerOfFew.External.FeigeOfek.Light
+import all PowerOfFew.External.FeigeOfek.Properties
+import all PowerOfFew.External.FeigeOfek.SixCases
 import all PowerOfFew.External.GolesOlivos.GolesOlivos
+import all PowerOfFew.External.RandomMatrix.RandomMatrix
 import all PowerOfFew.Model.BerryEsseen
 import all PowerOfFew.Model.EdgeConditioning
 import all PowerOfFew.Model.Gnp
@@ -83,8 +92,9 @@ hypotheses. The traversal
 stops at them. -/
 meta def externalResults : List (String × Name) :=
   [("Berry–Esseen, Shevtsova 2010 (assumed)", ``PowerOfFew.ShevtsovaBerryEsseen),
-   ("Benaych-Georges–Bordenave–Knowles Thm 3.2 (assumed)", ``PowerOfFew.BBKTheorem3_2),
-   ("Boucheron–Lugosi–Massart Thm 6.10 (assumed)", ``PowerOfFew.BLMTheorem6_10),
+   ("Feige–Ofek 2005", ``PowerOfFew.FeigeOfek.feigeOfek),
+   ("Benaych-Georges–Bordenave–Knowles Thm 3.2 (not assumed)", ``PowerOfFew.BBKTheorem3_2),
+   ("Boucheron–Lugosi–Massart Thm 6.10 (not assumed)", ``PowerOfFew.BLMTheorem6_10),
    ("Hoeffding (upper tail)", ``ProbabilityTheory.measureReal_sum_ge_add_le_exp),
    ("Hoeffding (lower tail)", ``ProbabilityTheory.measureReal_sum_le_sub_le_exp),
    ("Chernoff (relative entropy)", ``ProbabilityTheory.IsBernoulliFamily.measureReal_sum_le_le_exp_klBern),

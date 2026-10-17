@@ -13,11 +13,9 @@ The main results of two papers on majority dynamics on the Erdős–Rényi rando
   Algorithms 66 (2025), e21260 (the "sparse paper"; arXiv:2302.05605v2).
 
 **The formalization is conditional.** The papers' explicit constants rest on the Berry–Esseen
-inequality with Shevtsova's constant `0.56`, and the sparse paper's spectral argument on two
-results on random matrices. These are assumed, as hypotheses named after their sources:
-`ShevtsovaBerryEsseen` (Shevtsova 2010), `BBKTheorem3_2` (Benaych-Georges–Bordenave–Knowles,
-Theorem 3.2, for `G(n, p)`), `BLMTheorem6_10` (Boucheron–Lugosi–Massart, Theorem 6.10). Each
-theorem below takes exactly those it uses.
+inequality with Shevtsova's constant `0.56`. It is assumed, as the hypothesis
+`ShevtsovaBerryEsseen` (Shevtsova 2010), by each theorem below that uses it. The sparse paper's
+spectral bound (its Lemma A.7) is proved, by Feige and Ofek's argument.
 
 ## Conventions
 
@@ -218,41 +216,6 @@ def meanAdj (n : ℕ) (p : ℝ) : Matrix (Fin n) (Fin n) ℝ :=
 def specNorm {n : ℕ} (M : Matrix (Fin n) (Fin n) ℝ) : ℝ :=
   ‖Matrix.toEuclideanCLM (𝕜 := ℝ) (n := Fin n) M‖
 
-/-- **Benaych-Georges–Bordenave–Knowles**, *Spectral radii of sparse random matrices*
-(Ann. Inst. H. Poincaré Probab. Statist. 56, 2020; arXiv:1704.02945), Theorem 3.2, for the
-homogeneous Erdős–Rényi graph `G(n, p)` (`p_ij = p` for `i ≠ j`): there is a universal constant
-`C > 0` such that, with `d = p(n − 1)` (the maximal expected degree),
-`κ = p / (d / n)`, `q = √d ∧ n^(1/10) κ^(-1/9)` and `η = √(log n) / q`, if `q ≥ 1` then
-`E‖A − EA‖ / √d ≤ 2 + C η / √(1 ∨ log η)`. Assumed, not proved (the sparse paper uses it in
-Lemma A.7). -/
-def BBKTheorem3_2 : Prop :=
-  ∃ C : ℝ, 0 < C ∧ ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 →
-    let d : ℝ := p * (n - 1)
-    let κ : ℝ := p / (d / n)
-    let q : ℝ := min (Real.sqrt d) ((n : ℝ) ^ (1 / 10 : ℝ) * κ ^ (-(1 / 9 : ℝ)))
-    let η : ℝ := Real.sqrt (Real.log n) / q
-    1 ≤ q →
-      (∫ G, specNorm (adjMat G - meanAdj n p) ∂(SimpleGraph.binomialRandom (Fin n) (toUnit p))) /
-          Real.sqrt d ≤
-        2 + C * η / Real.sqrt (max 1 (Real.log η))
-
-/-- **Boucheron–Lugosi–Massart**, *Concentration Inequalities* (Oxford, 2013), Theorem 6.10: let
-`X₁, …, X_N` be independent random variables with values in `[0, 1]`, and `f : [0, 1]^N → ℝ` a
-separately convex function with `|f(x) − f(y)| ≤ ‖x − y‖` (Euclidean norm) on `[0, 1]^N`. Then
-`Z = f(X₁, …, X_N)` satisfies `P{Z > EZ + t} ≤ e^(−t²/2)` for all `t > 0`. Assumed, not proved
-(the sparse paper uses it in Lemma A.7). -/
-def BLMTheorem6_10 : Prop :=
-  ∀ (Ω : Type) [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ] (N : ℕ)
-    (X : Fin N → Ω → ℝ) (f : (Fin N → ℝ) → ℝ),
-    (∀ i, Measurable (X i)) → iIndepFun X μ → (∀ i ω, X i ω ∈ Set.Icc (0 : ℝ) 1) →
-    (∀ (x : Fin N → ℝ) (i : Fin N), (∀ j, x j ∈ Set.Icc (0 : ℝ) 1) →
-      ConvexOn ℝ (Set.Icc (0 : ℝ) 1) fun s => f (Function.update x i s)) →
-    (∀ x y : Fin N → ℝ, (∀ j, x j ∈ Set.Icc (0 : ℝ) 1) → (∀ j, y j ∈ Set.Icc (0 : ℝ) 1) →
-      |f x - f y| ≤ Real.sqrt (∑ j, (x j - y j) ^ 2)) →
-    ∀ t : ℝ, 0 < t →
-      μ.real {ω | (∫ ω', f (fun j => X j ω') ∂μ) + t < f (fun j => X j ω)} ≤
-        Real.exp (-t ^ 2 / 2)
-
 end PowerOfFew
 
 end
@@ -292,8 +255,7 @@ theorem dense_theorem1_3 (hBE : ShevtsovaBerryEsseen) {p : ℝ} (hp0 : 0 < p) (h
   sorry
 
 /-- Sparse paper, **Theorem 1.2** (the power of few for sparse graphs). -/
-theorem sparse_theorem1_2 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) :
+theorem sparse_theorem1_2 (hBE : ShevtsovaBerryEsseen) {lam : ℝ} (hlam : 0 < lam) :
     ∃ C K : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
       p * n ≤ (n : ℝ) - 10 → (1 + lam) * Real.log n ≤ p * n →
       10 ≤ p * ((n : ℝ) / 2 - B₀.ncard) →
@@ -304,8 +266,7 @@ theorem sparse_theorem1_2 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
 
 /-- Sparse paper, **Theorem 1.4** (a delayed version of the theorem of Fountoulakis, Kang and
 Makai). -/
-theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {ε : ℝ} (hε : 0 < ε) :
+theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) {ε : ℝ} (hε : 0 < ε) :
     ∃ lam : ℝ, 0 < lam ∧ ∃ T : ℕ, ∀ (n : ℕ) (p : ℝ), lam ≤ p * Real.sqrt n → p ≤ 1 →
       1 - ε ≤ coloredProb n p (1 / 2) (fun G B₀ =>
         ((B₀.ncard : ℝ) < n / 2 ∧ blueAfter G B₀ T = ∅) ∨
@@ -313,10 +274,9 @@ theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
   sorry
 
 /-- Sparse paper, **Theorem 1.5**, corrected (bias `ω(max{(pn)⁻¹, n^(−1/2)})`). -/
-theorem sparse_theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ} (hp0 : ∀ n, 0 < p n)
-    (hp1 : ∀ n, p n ≤ 1) (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n)
-    (hq : ∀ n, q n ≤ 1)
+theorem sparse_theorem1_5 (hBE : ShevtsovaBerryEsseen) {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ}
+    (hp0 : ∀ n, 0 < p n) (hp1 : ∀ n, p n ≤ 1)
+    (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n) (hq : ∀ n, q n ≤ 1)
     (hbias : Tendsto (fun n : ℕ => (q n - 1 / 2) * min (p n * n) (Real.sqrt n)) atTop atTop) :
     Tendsto (fun n : ℕ =>
       coloredProb n (p n) (q n) (fun G B₀ => ∃ t, blueAfter G B₀ t = ∅)) atTop (𝓝 1) := by
@@ -332,8 +292,8 @@ theorem sparse_theorem1_5_printed_false :
   sorry
 
 /-- Sparse paper, **Theorem 3.1** (below the connectivity threshold). -/
-theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
-    (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam < 1) :
+theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) {lam : ℝ} (hlam0 : 0 < lam)
+    (hlam1 : lam < 1) :
     ∃ C K : ℝ, ∀ (n : ℕ) (B₀ : Set (Fin n)),
       10 ≤ (1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) →
       1 - C * (1 / min (n : ℝ) ((1 - lam) * Real.log n / n * ((n : ℝ) / 2 - B₀.ncard) ^ 2) +
@@ -349,7 +309,7 @@ theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
   sorry
 
 /-- Sparse paper, **Theorem 1.7**, corrected (random activations and updates). -/
-theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen)
     {pac pup : ℝ} (hpac0 : 0 < pac) (hpac1 : pac ≤ 1) (hpup0 : 0 < pup) (hpup1 : pup ≤ 1)
     {lam : ℝ} (hlam : 0 < lam) {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1) :
     ∃ C S A C' c : ℝ, 0 < c ∧ ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
@@ -361,7 +321,7 @@ theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (h
   sorry
 
 /-- Sparse paper, **Theorem 4.1**, corrected. -/
-theorem sparse_theorem4_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
+theorem sparse_theorem4_1 (hBE : ShevtsovaBerryEsseen) :
     ∃ (M S : ℝ → ℝ) (A c₁ : ℝ), 0 < c₁ ∧ ∀ ε K lam : ℝ, 0 < ε → ε < 1 → 8 ≤ K → 0 < lam →
       ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ pac pup : ℝ, 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
       ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →

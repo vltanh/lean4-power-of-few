@@ -39,12 +39,12 @@ applies (`pΔ ≥ c ≥ 10`, `pΔ² ≥ cΔ ≥ c² ≥ 2c`), with failure proba
 ahead by `2Δ ≥ 2c` vertices, wins within two days with probability at least
 `1 − 40/(2c − 1) − 2048/n ≥ 1 − 1064/c` (`colorAux_nearComplete`). The paper's `ε ≤ 1` is not
 needed and is omitted. -/
-theorem theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem theorem1_5 (hBE : ShevtsovaBerryEsseen)
     {ε : ℝ} (hε0 : 0 < ε) {lam : ℝ} (hlam : 0 < lam) :
     ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ) (p : ℝ), 0 < p → p ≤ 1 → (1 + lam) * Real.log n / n ≤ p →
       ∀ B₀ : Set (Fin n), (B₀.ncard : ℝ) ≤ n / 2 - c / p →
         1 - ε ≤ gnpProb n p (fun G => ∃ t, blueAfter G B₀ t = ∅) := by
-  obtain ⟨C, K, hmain⟩ := Sparse.theorem1_2 hBE hBBK hBLM hlam
+  obtain ⟨C, K, hmain⟩ := Sparse.theorem1_2 hBE hlam
   set C' := max C 1 with hC'
   -- the failure bounds tend to `0` as `c → ∞`
   have h2c : Tendsto (fun c : ℝ => 2 * c) atTop atTop := tendsto_id.const_mul_atTop two_pos
@@ -151,14 +151,14 @@ otherwise the majority side has at least `n/2 + c'√n ≥ n/2 + c/p` members (a
 and wins with probability at least `1 − ε/2` by Theorem 1.5 (colour symmetry for Blue). The
 paper's "for sufficiently large `n`" holds because `p ≤ 1` forces `n ≥ λ²`, and Theorem 1.5's
 condition `p ≥ 2 log n / n` holds because `pn ≥ λ√n ≥ 4√n`. -/
-theorem appendixA (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+theorem appendixA (hBE : ShevtsovaBerryEsseen)
     {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ∃ lam : ℝ, 0 < lam ∧ ∀ (n : ℕ) (p : ℝ), lam ≤ p * Real.sqrt n → p ≤ 1 →
       1 - ε ≤ coloredProb n p (1 / 2) (fun G B₀ =>
         ((B₀.ncard : ℝ) < n / 2 ∧ ∃ t, blueAfter G B₀ t = ∅) ∨
           ((n : ℝ) / 2 < B₀.ncard ∧ ∃ t, blueAfter G B₀ t = Set.univ)) := by
   -- Theorem 1.5 with `ε/2` (and `λ = 1`: `p ≥ λ n^(−1/2)` gives `p ≥ 2 log n / n`)
-  obtain ⟨c, hc, h15⟩ := theorem1_5 hBE hBBK hBLM (ε := ε / 2) (by linarith)
+  obtain ⟨c, hc, h15⟩ := theorem1_5 hBE (ε := ε / 2) (by linarith)
     (lam := 1) one_pos
   -- the paper's constant `c' ≤ ε/6`
   set c' : ℝ := ε / 6 with hc'

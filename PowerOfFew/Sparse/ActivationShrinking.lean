@@ -1826,7 +1826,7 @@ In Case 2 the paper cites Lemma 2.6 (`S:lem:step3`) for the bound on the active 
 Blue in the hypothetical step; that bound is the first half of Lemma 2.6's proof, Lemma 2.5 with
 Lemmas A.7 and A.4 on the subgraph induced by the active vertices, which the proof uses directly.
 -/
-theorem proposition4_3 (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
+theorem proposition4_3 :
     ∃ A c₁ : ℝ, 0 < c₁ ∧ ∀ K lam : ℝ, 8 ≤ K → 0 < lam →
       ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ pac pup : ℝ, 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
       ∃ N : ℕ, ∀ n ≥ N, ∀ (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
@@ -1840,7 +1840,7 @@ theorem proposition4_3 (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
   obtain ⟨κ, hκ, N₂₄, h24⟩ := lemma2_4 (a := 2) (b := 3 / 10) (by norm_num) (by norm_num)
     (by norm_num) (by have := Real.log_two_lt_d9; norm_num at this ⊢; linarith)
   -- Lemma A.7 with `c = a = 1` (Case 2)
-  obtain ⟨C, hC⟩ := lemmaA_7 hBBK hBLM (c := 1) (a := 1) one_pos one_pos
+  obtain ⟨C, hC⟩ := lemmaA_7 (c := 1) (a := 1) one_pos one_pos
   refine ⟨3, 1 / 200, by norm_num, fun K lam hK hlam => ?_⟩
   have hα0 : 0 < alphaDeg lam := Real.exp_pos _
   refine ⟨alphaDeg lam / 800, div_pos hα0 (by norm_num),
