@@ -1,7 +1,7 @@
 module
 
-public import PowerOfFew.Sparse.Main
-public import PowerOfFew.Sparse.Chernoff
+public import PowerOfFew.Sparse.ActivationDayOne
+public import PowerOfFew.Sparse.ActivationShrinking
 
 /-!
 # Sparse paper, Section 4: random activations and updates
@@ -27,6 +27,9 @@ argument uses): `(1 − p) p_ac n ≥ 10`, the analogue for the active subgraph 
 `n − 10 ≥ pn`. The proofs of Propositions 4.2 and 4.3 apply Lemmas 2.1 and 2.4 to the subgraph
 induced on the active vertices (about `p_ac n` of them), which need `p` bounded away from `1`.
 
+The propositions are in `ActivationDayOne.lean` (4.2), `ActivationShrinking.lean` (4.3) and
+`ActivationLastDays.lean` (4.4); the model's tools are in `PowerOfFew/Model/Lazy.lean`.
+
 Readings: `Δ = n/2 − |B₀|`. Propositions 4.3 and 4.4 are stated, as their proofs show them, as
 bounds on the probability that their assumption holds and their conclusion fails. The proofs take
 `n` large in terms of `λ`, `p_ac`, `p_up` (`n ≥ N`, or a constant `C` that absorbs small `n`). The
@@ -42,67 +45,6 @@ open MeasureTheory ProbabilityTheory
 noncomputable section
 
 namespace PowerOfFew.Sparse
-
-/-- `α_λ = exp(−(8/λ + 7))`, the constant of Lemma A.4. -/
-def alphaDeg (lam : ℝ) : ℝ := Real.exp (-(8 / lam + 7))
-
-/-- **Proposition 4.2** (`S:prop:day1-lazy`). In the setting of Theorem 4.1, for every
-`ε ∈ (0, 1)` and `K > 0` there are `M_K`, `S_ε` and `T_ε` such that, when
-`p_ac^(1/2) Δ ≥ S_ε n^(1/2)`, `p^(1/2) p_up p_ac Δ ≥ T_ε` and `p p_up p_ac² Δ ≥ M_K`, with
-probability at least `1 − ε`, `|B₁| ≤ n/2 − K √(n / (p p_ac))`.
-
-Readings: the paper writes "for every `ε ∈ (0, 1)` and `T > 0`", a misprint for `K > 0`; its proof
-takes `n` large (`n ≥ N`) and uses `(1 − p) p_ac n ≥ 10` (module docstring). -/
-theorem proposition4_2 (hBE : ShevtsovaBerryEsseen) :
-    ∃ M S T : ℝ → ℝ, ∀ ε K lam pac pup : ℝ, 0 < ε → ε < 1 → 0 < K → 0 < lam → 0 < pac →
-      pac ≤ 1 → 0 < pup → pup ≤ 1 →
-      ∃ N : ℕ, ∀ n ≥ N, ∀ (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
-        (1 + lam) * Real.log n ≤ p * pac * n → 10 ≤ (1 - p) * pac * n →
-        S ε * Real.sqrt n ≤ Real.sqrt pac * ((n : ℝ) / 2 - B₀.ncard) →
-        T ε ≤ Real.sqrt p * pup * pac * ((n : ℝ) / 2 - B₀.ncard) →
-        M K ≤ p * pup * pac ^ 2 * ((n : ℝ) / 2 - B₀.ncard) →
-        1 - ε ≤ lazyProb n p pac pup (fun G c =>
-          ((lazyBlueAfter G c B₀ 1).ncard : ℝ) ≤ n / 2 - K * Real.sqrt (n / (p * pac))) := by
-  sorry
-
-/-- **Proposition 4.3** (`S:prop:main-lazy-details-prop2`). Under the assumptions of Theorem 4.1
-and `|B₁| ≤ n/2 − K √(n / (p p_ac))`, for every `K ≥ 8` there is `t*₁ = O(p_up⁻¹ p_ac⁻¹ log n)`
-such that, with probability at least `1 − e^(−Ω(K² p⁻¹)) − n^(−Ω(p_up p_ac))`,
-`|B_{t*₁}| ≤ α_λ (log n) / 2`.
-
-Readings: the probability that `|B₁|` satisfies the assumption and every `B_t`,
-`t ≤ A log n / (p_up p_ac)`, has more than `α_λ (log n)/2` vertices is at most
-`e^(−c₁ K² / p) + n^(−c₂ p_up p_ac)`; the statement's "for every `ε > 0`" is unused. -/
-theorem proposition4_3 (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
-    ∃ A c₁ : ℝ, 0 < c₁ ∧ ∀ K lam : ℝ, 8 ≤ K → 0 < lam →
-      ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ pac pup : ℝ, 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
-      ∃ N : ℕ, ∀ n ≥ N, ∀ (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
-        (1 + lam) * Real.log n ≤ p * pac * n → 10 ≤ (1 - p) * pac * n →
-        lazyProb n p pac pup (fun G c =>
-          ((lazyBlueAfter G c B₀ 1).ncard : ℝ) ≤ n / 2 - K * Real.sqrt (n / (p * pac)) ∧
-          ∀ t : ℕ, (t : ℝ) ≤ A * Real.log n / (pup * pac) →
-            alphaDeg lam * Real.log n / 2 < (lazyBlueAfter G c B₀ t).ncard) ≤
-          Real.exp (-(c₁ * K ^ 2 / p)) + (n : ℝ) ^ (-(c₂ * pup * pac)) := by
-  sorry
-
-/-- **Proposition 4.4** (`S:prop:lazy-final`; unlabelled in the paper). Under the assumptions of
-Theorem 4.1 and `|B_{t*₁}| ≤ α_λ (log n)/2`, where `t*₁ = O(p_up⁻¹ p_ac⁻¹ log n)` comes from
-Proposition 4.3, there is `t*₂ = t*₁ + O(log n)` such that Red wins after day `t*₂` with
-probability at least `1 − O(n^(−λ/4)) − O(n^(−p_up p_ac / 2))`.
-
-Reading: for every `A₁`, the probability that some day `t₀ ≤ A₁ log n / (p_up p_ac)` has
-`|B_{t₀}| ≤ α_λ (log n)/2` while Blue is not empty on day
-`⌈A₁ log n / (p_up p_ac)⌉ + ⌈A log n⌉` is at most `C n^(−λ/4) + C n^(−p_up p_ac / 2)`. -/
-theorem proposition4_4 :
-    ∃ A C : ℝ, ∀ A₁ lam pac pup : ℝ, 0 < A₁ → 0 < lam → 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
-      ∃ N : ℕ, ∀ n ≥ N, ∀ (p : ℝ) (B₀ : Set (Fin n)), 0 < p → p ≤ 1 →
-        (1 + lam) * Real.log n ≤ p * pac * n →
-        lazyProb n p pac pup (fun G c =>
-          (∃ t₀ : ℕ, (t₀ : ℝ) ≤ A₁ * Real.log n / (pup * pac) ∧
-            ((lazyBlueAfter G c B₀ t₀).ncard : ℝ) ≤ alphaDeg lam * Real.log n / 2) ∧
-          lazyBlueAfter G c B₀ (⌈A₁ * Real.log n / (pup * pac)⌉₊ + ⌈A * Real.log n⌉₊) ≠ ∅) ≤
-          C * (n : ℝ) ^ (-(lam / 4)) + C * (n : ℝ) ^ (-(pup * pac / 2)) := by
-  sorry
 
 /-- **Theorem 4.1** (`S:thm:main-lazy-details`), corrected. Assume `|R₀| = n/2 + Δ`,
 `p p_ac n ≥ (1 + λ) log n` for a constant `λ > 0`, and `(1 − p) p_ac n ≥ 10`. For every

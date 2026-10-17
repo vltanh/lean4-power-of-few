@@ -20,10 +20,14 @@ import all PowerOfFew.External.GolesOlivos.GolesOlivos
 import all PowerOfFew.Model.BerryEsseen
 import all PowerOfFew.Model.EdgeConditioning
 import all PowerOfFew.Model.Gnp
+import all PowerOfFew.Model.Lazy
 import all PowerOfFew.Model.Majority
 import all PowerOfFew.Model.Normal
 import all PowerOfFew.Sparse.Activation
 import all PowerOfFew.Sparse.ActivationCounterexample
+import all PowerOfFew.Sparse.ActivationDayOne
+import all PowerOfFew.Sparse.ActivationLastDays
+import all PowerOfFew.Sparse.ActivationShrinking
 import all PowerOfFew.Sparse.BerryEsseen
 import all PowerOfFew.Sparse.Chernoff
 import all PowerOfFew.Sparse.DayOne
