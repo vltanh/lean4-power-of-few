@@ -31,7 +31,12 @@ def Shrinks (m₁ m₂ : ℝ) : Prop :=
 
 theorem nbrCount_add_nbrCount_compl (B : Set (Fin n)) (v : Fin n) :
     nbrCount G B v + nbrCount G Bᶜ v = degree G v := by
-  sorry
+  -- The Blue and the Red neighbours of `v` partition its neighbourhood.
+  have h1 : {u | G.Adj v u ∧ u ∈ B} = G.neighborSet v ∩ B := rfl
+  have h2 : {u | G.Adj v u ∧ u ∈ Bᶜ} = G.neighborSet v \ B := rfl
+  unfold nbrCount degree
+  rw [h1, h2]
+  exact Set.ncard_inter_add_ncard_sdiff_eq_ncard _ _
 
 open Classical in
 /-- A vertex is Red the next day iff its Blue neighbours are fewer than its Red neighbours, plus
@@ -39,49 +44,89 @@ one if it is Red today (dense paper, equation (2.1): `v ∈ R₁ ⟺ d_{R₀}(v)
 theorem notMem_majorityStep_iff (B : Set (Fin n)) (v : Fin n) :
     v ∉ majorityStep G B ↔
       (nbrCount G B v : ℤ) < nbrCount G Bᶜ v + (if v ∈ B then 0 else 1) := by
-  sorry
+  by_cases hv : v ∈ B
+  · simp [majorityStep, hv]
+    omega
+  · simp [majorityStep, hv]
 
 theorem majorityStep_mono {B B' : Set (Fin n)} (h : B ⊆ B') :
     majorityStep G B ⊆ majorityStep G B' := by
-  sorry
+  intro v hv
+  -- More Blue neighbours and fewer Red neighbours in `B'` than in `B`.
+  have hB : nbrCount G B v ≤ nbrCount G B' v :=
+    Set.ncard_le_ncard (fun u hu => ⟨hu.1, h hu.2⟩)
+  have hC : nbrCount G B'ᶜ v ≤ nbrCount G Bᶜ v :=
+    Set.ncard_le_ncard (fun u hu => ⟨hu.1, fun hu' => hu.2 (h hu')⟩)
+  simp only [majorityStep, Set.mem_ofPred_eq] at hv ⊢
+  rcases hv with hv | ⟨hv1, hv2⟩
+  · left; omega
+  · by_cases hlt : nbrCount G B'ᶜ v < nbrCount G B' v
+    · exact Or.inl hlt
+    · exact Or.inr ⟨by omega, h hv2⟩
 
 @[simp] theorem majorityStep_empty : majorityStep G ∅ = ∅ := by
-  sorry
+  ext v
+  simp [majorityStep, nbrCount]
 
 @[simp] theorem majorityStep_univ : majorityStep G Set.univ = Set.univ := by
-  sorry
+  ext v
+  have h0 : nbrCount G Set.univᶜ v = 0 := by simp [nbrCount]
+  simp only [majorityStep, Set.mem_ofPred_eq, Set.mem_univ, and_true, iff_true, h0]
+  omega
 
 @[simp] theorem blueAfter_zero (B₀ : Set (Fin n)) : blueAfter G B₀ 0 = B₀ := rfl
 
 theorem blueAfter_succ (B₀ : Set (Fin n)) (t : ℕ) :
     blueAfter G B₀ (t + 1) = majorityStep G (blueAfter G B₀ t) := by
-  sorry
+  exact Function.iterate_succ_apply' _ _ _
 
 theorem blueAfter_add (B₀ : Set (Fin n)) (s t : ℕ) :
     blueAfter G B₀ (s + t) = blueAfter G (blueAfter G B₀ s) t := by
-  sorry
+  unfold blueAfter
+  rw [add_comm, Function.iterate_add_apply]
 
 theorem blueAfter_mono {B B' : Set (Fin n)} (h : B ⊆ B') (t : ℕ) :
     blueAfter G B t ⊆ blueAfter G B' t := by
-  sorry
+  induction t with
+  | zero => exact h
+  | succ t ih =>
+    rw [blueAfter_succ, blueAfter_succ]
+    exact majorityStep_mono G ih
 
 theorem blueAfter_eq_empty_of_le {B₀ : Set (Fin n)} {s t : ℕ} (h : blueAfter G B₀ s = ∅)
     (hst : s ≤ t) : blueAfter G B₀ t = ∅ := by
-  sorry
+  obtain ⟨k, rfl⟩ := Nat.exists_eq_add_of_le hst
+  rw [blueAfter_add, h]
+  exact Function.iterate_fixed (majorityStep_empty G) k
 
 theorem blueAfter_eq_univ_of_le {B₀ : Set (Fin n)} {s t : ℕ} (h : blueAfter G B₀ s = Set.univ)
     (hst : s ≤ t) : blueAfter G B₀ t = Set.univ := by
-  sorry
+  obtain ⟨k, rfl⟩ := Nat.exists_eq_add_of_le hst
+  rw [blueAfter_add, h]
+  exact Function.iterate_fixed (majorityStep_univ G) k
 
 /-- If every degree exceeds `2m`, every Blue set of at most `m` vertices vanishes the next day. -/
 theorem majorityStep_eq_empty_of_lt_degree {m : ℝ} (hdeg : ∀ v, 2 * m < degree G v)
     {B : Set (Fin n)} (hB : (B.ncard : ℝ) ≤ m) : majorityStep G B = ∅ := by
-  sorry
+  ext v
+  -- `v` has at most `|B| ≤ m` Blue neighbours, hence more than `deg v − m > m` Red ones.
+  have hle : nbrCount G B v ≤ B.ncard := Set.ncard_le_ncard (fun u hu => hu.2)
+  have hsum := nbrCount_add_nbrCount_compl G B v
+  have hlt : nbrCount G B v < nbrCount G Bᶜ v := by
+    have h1 : (nbrCount G B v : ℝ) ≤ B.ncard := by exact_mod_cast hle
+    have h2 : ((nbrCount G B v + nbrCount G Bᶜ v : ℕ) : ℝ) = degree G v := by rw [hsum]
+    have h3 := hdeg v
+    push_cast at h2
+    exact_mod_cast (by linarith : (nbrCount G B v : ℝ) < nbrCount G Bᶜ v)
+  simp only [majorityStep, Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_or,
+    not_and]
+  exact ⟨by omega, fun h => absurd h (by omega)⟩
 
 /-- Shrinking is monotone in the source bound and the target bound. -/
 theorem Shrinks.mono {m₁ m₂ m₁' m₂' : ℝ} (h : Shrinks G m₁ m₂) (h₁ : m₁' ≤ m₁) (h₂ : m₂ ≤ m₂') :
     Shrinks G m₁' m₂' := by
-  sorry
+  intro B hB
+  exact (h B (hB.trans h₁)).trans h₂
 
 end PowerOfFew
 
