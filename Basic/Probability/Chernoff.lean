@@ -346,7 +346,53 @@ theorem measureReal_sum_ge_le_exp_mul_log (hX : IsBernoulliFamily μ p X) (hp0 :
     (hp1 : p ≤ 1) (s : Finset ι) {k : ℝ} (hk : 0 < k) :
     μ.real {ω | k ≤ ∑ i ∈ s, X i ω} ≤
       Real.exp (-(k * Real.log (k / (Real.exp 1 * (p * s.card))))) := by
-  sorry
+  have hpm0 : 0 ≤ p * s.card := by positivity
+  by_cases hle : k ≤ Real.exp 1 * (p * s.card)
+  · -- `k ≤ e p m`: `log(k / (e p m)) ≤ 0`, so the right-hand side is at least `1`.
+    refine measureReal_le_one.trans (Real.one_le_exp_iff.mpr ?_)
+    have hlog : Real.log (k / (Real.exp 1 * (p * s.card))) ≤ 0 :=
+      Real.log_nonpos (by positivity) (div_le_one_of_le₀ hle (by positivity))
+    nlinarith
+  push Not at hle
+  rcases hpm0.eq_or_lt with hpm | hpm
+  · -- `p m = 0`: `log(k / 0) = 0`, so the right-hand side is `1`.
+    rw [← hpm, mul_zero, div_zero, Real.log_zero, mul_zero, neg_zero, Real.exp_zero]
+    exact measureReal_le_one
+  · -- `k > e p m > 0`: Chernoff's bound with `θ = log(k / (p m)) ≥ 0`, so `e^θ = k / (p m)`.
+    have hkpm : p * s.card ≤ k := by
+      nlinarith [Real.add_one_le_exp (1 : ℝ)]
+    have hθ : 0 ≤ Real.log (k / (p * s.card)) :=
+      Real.log_nonneg (by rw [le_div_iff₀ hpm, one_mul]; exact hkpm)
+    have hexp : Real.exp (Real.log (k / (p * s.card))) = k / (p * s.card) :=
+      Real.exp_log (div_pos hk hpm)
+    -- `log(k / (e p m)) = log(k / (p m)) − 1`.
+    have hlog : Real.log (k / (Real.exp 1 * (p * s.card))) = Real.log (k / (p * s.card)) - 1 := by
+      rw [Real.log_div hk.ne' (by positivity), Real.log_mul (Real.exp_pos 1).ne' hpm.ne',
+        Real.log_exp, Real.log_div hk.ne' hpm.ne']
+      ring
+    -- `1 − p + p e^θ ≤ exp(p (e^θ − 1))`.
+    have hbase : 1 - p + p * Real.exp (Real.log (k / (p * s.card))) ≤
+        Real.exp (p * (Real.exp (Real.log (k / (p * s.card))) - 1)) := by
+      linarith [Real.add_one_le_exp (p * (Real.exp (Real.log (k / (p * s.card))) - 1))]
+    have hbase0 : 0 ≤ 1 - p + p * Real.exp (Real.log (k / (p * s.card))) := by
+      nlinarith [Real.exp_pos (Real.log (k / (p * s.card)))]
+    calc μ.real {ω | k ≤ ∑ i ∈ s, X i ω}
+        ≤ Real.exp (-Real.log (k / (p * s.card)) * k) *
+            (1 - p + p * Real.exp (Real.log (k / (p * s.card)))) ^ s.card :=
+          hX.measureReal_sum_ge_le_exp_mul s hθ k
+      _ ≤ Real.exp (-Real.log (k / (p * s.card)) * k) *
+            Real.exp (p * (Real.exp (Real.log (k / (p * s.card))) - 1)) ^ s.card := by
+          gcongr
+      _ = Real.exp (-Real.log (k / (p * s.card)) * k + (k - p * s.card)) := by
+          rw [← Real.exp_nat_mul, ← Real.exp_add, hexp]
+          congr 2
+          calc (s.card : ℝ) * (p * (k / (p * s.card) - 1))
+              = p * s.card * (k / (p * s.card)) - p * s.card := by ring
+            _ = k - p * s.card := by rw [mul_div_cancel₀ _ hpm.ne']
+      _ ≤ Real.exp (-(k * Real.log (k / (Real.exp 1 * (p * s.card))))) := by
+          rw [hlog]
+          gcongr
+          nlinarith
 
 end IsBernoulliFamily
 
