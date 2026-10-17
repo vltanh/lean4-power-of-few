@@ -1,0 +1,5 @@
+# Reviewed differences between the routes of the papers' proofs (docs/paper_routes.tsv) and those of
+# the formal proofs (.lake/route_deps.tsv, written by scripts/Audit.lean). One line per difference:
+# label, then -OTHER (the paper's proof cites OTHER, the Lean proof does not use it) or +OTHER (the
+# Lean proof uses OTHER, the paper's proof does not cite it), then the reason.
+D:thm:1/sqrt-n	-D:thm:diff-of-binom-r.v.-gen.	Not a departure. The paper's proof of Lemma 2.4 reuses "the same computations" as Lemma 2.3 (Theorem 2.2 applied to X1 - X2), not Lemma 2.3's statement, which assumes n1 > n2. Both Lean proofs call that computation, packaged as dayOneAux_berryEsseen_diff (Dense/BinomialDifference.lean).
