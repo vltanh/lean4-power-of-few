@@ -14,7 +14,8 @@ The proof of Proposition 2.2 quotes Lemma A.3 as `P(X = …) ≤ C_BE / √(p(1 
 Lemma A.3 gives `2 C_BE (1 − 2σ²) / (σ √(n − 2))`. With that bound, the covariance of two
 indicators is at most `4 C_BE² (1 − 2σ²)² / (n − 2)`, and
 `Var|B₁| ≤ n (1/4 + 4 C_BE² (1 − 2σ²)² (n − 1)/(n − 2))` instead of `7n/12`; the two agree in
-form at `p = 1/2`. `varConst n p` is this coefficient, and Lemma 2.1's constant
+form at `p = 1/2`. (Lemma A.3 also requires a positive integer `d < (n₁ + n₂)/2`, while Proposition
+2.2 applies it with `d ∈ {0, −1}`; it holds for every integer `d`.) `varConst n p` is this coefficient, and Lemma 2.1's constant
 `C(c, D) = 7 / (12 (D_c − D)²)` becomes `varConst n p / (D_c − D)²`.
 -/
 
@@ -38,10 +39,13 @@ def varConst (n : ℕ) (p : ℝ) : ℝ :=
 `0 < c ≤ min{pΔ, √(p(1 − p)n)}` and `|B₀| ≤ n/2 − Δ`,
 `E|B₁| ≤ n/2 − D_c min{n, Δ √(pn)}` and `Var|B₁| ≤ varConst n p · n` (printed: `7n/12`).
 
-Deviation (hypothesis the proof uses): the proof sets `y = 2 − 1/c` and needs `y > 0`, so
-`c > 1/2`; Lemma 2.1 only uses `c` with `D_c > 0`, which forces `c > 1/2`. -/
+Deviation (hypothesis the proof uses): the statement assumes `D_c > 0`, which is all that Lemma 2.1
+uses. The proof's last step turns `1/2 − min{D_c, D_c x}` into `1/2 − D_c min{1, x}`, which needs
+`D_c ≥ 0`; it also sets `y = 2 − 1/c > 0` and replaces the Berry–Esseen error
+`C_BE (1 − 2σ²)/(σ √(n − 1))` by `C_BE / (σ √n)`, valid when `4σ²(1 − σ²) n ≥ 1`. Since `D_c` is
+increasing in `c` and negative at `c = 1.39`, `D_c > 0` gives `c > 1.39`, hence both. -/
 theorem proposition2_2 (hBE : ShevtsovaBerryEsseen) {n : ℕ} {p Δ c : ℝ} (hp0 : 0 < p)
-    (hp1 : p < 1) (hc : 1 / 2 < c) (hcΔ : c ≤ p * Δ) (hcn : c ≤ Real.sqrt (p * (1 - p) * n))
+    (hp1 : p < 1) (hDc : 0 < Dc c) (hcΔ : c ≤ p * Δ) (hcn : c ≤ Real.sqrt (p * (1 - p) * n))
     {B₀ : Set (Fin n)} (hB₀ : (B₀.ncard : ℝ) ≤ n / 2 - Δ) :
     gnpExp n p (fun G => ((blueAfter G B₀ 1).ncard : ℝ)) ≤
         n / 2 - Dc c * min (n : ℝ) (Δ * Real.sqrt (p * n)) ∧

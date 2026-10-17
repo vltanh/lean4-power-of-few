@@ -23,6 +23,7 @@ import all PowerOfFew.Model.Gnp
 import all PowerOfFew.Model.Majority
 import all PowerOfFew.Model.Normal
 import all PowerOfFew.Sparse.Activation
+import all PowerOfFew.Sparse.ActivationCounterexample
 import all PowerOfFew.Sparse.BerryEsseen
 import all PowerOfFew.Sparse.Chernoff
 import all PowerOfFew.Sparse.DayOne

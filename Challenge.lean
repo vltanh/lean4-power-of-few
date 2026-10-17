@@ -48,12 +48,21 @@ theorem below takes exactly those it uses.
 * `Challenge.sparse_theorem1_4`: with a random balanced colouring and `p ≥ λ n^(−1/2)`, the larger
   side wins in `O(1)` days with probability at least `1 − ε`.
 * `Challenge.sparse_theorem1_5`: with a random colouring biased towards Red by
-  `ω(max{(pn)⁻¹, n^(−1/2)})` and `p ≥ (1 + λ) log n / n`, Red wins with probability `1 − o(1)`.
+  `ω(max{(pn)⁻¹, n^(−1/2)})` and `p ≥ (1 + λ) log n / n` (for large `n`), Red wins with
+  probability `1 − o(1)`.
   The paper asks only for a bias `ω((pn)⁻¹)`; `Challenge.sparse_theorem1_5_printed_false` shows
   that the printed statement is false (take `p = 1` and bias `(log n)/n`).
-* `Challenge.sparse_theorem3_1`: for `p = (1 − λ) log n / n`, the process becomes periodic with
-  period at most 2, and ends with at most `(log n)^(O(√(log n))) n^λ` Blue vertices, of average
-  degree `O(√(pn))`.
+* `Challenge.sparse_theorem3_1`: for `p = (1 − λ) log n / n` and `pΔ ≥ 10`, with probability at
+  least `1 − O(1/min{n, pΔ²} + n^(−(1−λ)))` the process becomes periodic with period at most 2,
+  and ends with at most `(log n)^(O(√(log n))) n^λ` Blue vertices, of average degree `O(√(pn))`.
+* `Challenge.sparse_theorem1_7` and `Challenge.sparse_theorem4_1`: majority dynamics with random
+  activations (rate `p_ac`) and updates (rate `p_up`), corrected. As printed both theorems are
+  false: with `p = 1`, `p_ac = 1/2`, `p_up = 1` and `Δ = ⌊n^(1/4)⌋`, Red wins with probability at
+  most `1/2 + o(1)` (`Challenge.sparse_theorem1_7_printed_false_seq`,
+  `Challenge.sparse_theorem4_1_printed_false_seq`, which refute the printed bounds along that
+  sequence). The corrected statements add the hypothesis `Δ ≥ S_ε √(n/p_ac)` with a failure
+  probability `ε` for the first day, as in the paper's Proposition 4.2, and `(1 − p) p_ac n ≥ 10`,
+  the analogue of Theorem 1.2's `n − 10 ≥ pn` that the paper's proofs use.
 -/
 
 @[expose] public section
@@ -306,7 +315,7 @@ theorem sparse_theorem1_4 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
 /-- Sparse paper, **Theorem 1.5**, corrected (bias `ω(max{(pn)⁻¹, n^(−1/2)})`). -/
 theorem sparse_theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
     (hBLM : BLMTheorem6_10) {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ} (hp0 : ∀ n, 0 < p n)
-    (hp1 : ∀ n, p n ≤ 1) (hlog : ∀ n : ℕ, (1 + lam) * Real.log n / n ≤ p n)
+    (hp1 : ∀ n, p n ≤ 1) (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n)
     (hq : ∀ n, q n ≤ 1)
     (hbias : Tendsto (fun n : ℕ => (q n - 1 / 2) * min (p n * n) (Real.sqrt n)) atTop atTop) :
     Tendsto (fun n : ℕ =>
@@ -337,6 +346,58 @@ theorem sparse_theorem3_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2)
             Real.log n ^ (K * Real.sqrt (Real.log n)) * (n : ℝ) ^ lam ∧
           ∑ᶠ v ∈ blueAfter G B₀ t₀, (degree G v : ℝ) ≤
             K * Real.sqrt ((1 - lam) * Real.log n) * (blueAfter G B₀ t₀).ncard) := by
+  sorry
+
+/-- Sparse paper, **Theorem 1.7**, corrected (random activations and updates). -/
+theorem sparse_theorem1_7 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
+    {pac pup : ℝ} (hpac0 : 0 < pac) (hpac1 : pac ≤ 1) (hpup0 : 0 < pup) (hpup1 : pup ≤ 1)
+    {lam : ℝ} (hlam : 0 < lam) {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1) :
+    ∃ C S A C' c : ℝ, 0 < c ∧ ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
+      (1 + lam) * Real.log n ≤ p * pac * n → 10 ≤ (1 - p) * pac * n →
+      C ≤ p * ((n : ℝ) / 2 - B₀.ncard) → S * Real.sqrt n ≤ (n : ℝ) / 2 - B₀.ncard →
+      1 - ε - C' * (n : ℝ) ^ (-(lam / 4)) - (n : ℝ) ^ (-c) ≤
+        lazyProb n p pac pup (fun G c' => ∃ t : ℕ,
+          (t : ℝ) ≤ A * Real.log n ∧ lazyBlueAfter G c' B₀ t = ∅) := by
+  sorry
+
+/-- Sparse paper, **Theorem 4.1**, corrected. -/
+theorem sparse_theorem4_1 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10) :
+    ∃ (M S : ℝ → ℝ) (A c₁ : ℝ), 0 < c₁ ∧ ∀ ε K lam : ℝ, 0 < ε → ε < 1 → 8 ≤ K → 0 < lam →
+      ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ pac pup : ℝ, 0 < pac → pac ≤ 1 → 0 < pup → pup ≤ 1 →
+      ∃ C : ℝ, ∀ (n : ℕ) (p : ℝ) (B₀ : Set (Fin n)), 0 < p →
+        (1 + lam) * Real.log n ≤ p * pac * n → 10 ≤ (1 - p) * pac * n →
+        S ε * Real.sqrt n ≤ Real.sqrt pac * ((n : ℝ) / 2 - B₀.ncard) →
+        M K ≤ p * pup * pac ^ 2 * ((n : ℝ) / 2 - B₀.ncard) →
+        1 - ε - Real.exp (-(c₁ * K ^ 2 / p)) - C * (n : ℝ) ^ (-(lam / 4)) -
+            (n : ℝ) ^ (-(c₂ * pup * pac)) ≤
+          lazyProb n p pac pup (fun G c => ∃ t : ℕ,
+            (t : ℝ) ≤ A * Real.log n / (pup * pac) ∧ lazyBlueAfter G c B₀ t = ∅) := by
+  sorry
+
+/-- Sparse paper, **Theorem 1.7** as printed fails along one sequence. -/
+theorem sparse_theorem1_7_printed_false_seq :
+    ∃ B : (n : ℕ) → Set (Fin n),
+      (∀ C₀ : ℝ, ∀ᶠ n : ℕ in atTop, (1 + 1 / 2) * Real.log n ≤ 1 * (1 / 2) * n ∧
+        C₀ ≤ 1 * ((n : ℝ) / 2 - (B n).ncard)) ∧
+      ¬ ∃ A C₁ C₂ c : ℝ, 0 < c ∧ ∀ᶠ n : ℕ in atTop,
+          1 - C₁ / min (n : ℝ) (1 * ((n : ℝ) / 2 - (B n).ncard) ^ 2) -
+              C₂ * (n : ℝ) ^ (-((1 / 2 : ℝ) / 4)) - (n : ℝ) ^ (-c) ≤
+            lazyProb n 1 (1 / 2) 1 (fun G c' => ∃ t : ℕ,
+              (t : ℝ) ≤ A * Real.log n ∧ lazyBlueAfter G c' (B n) t = ∅) := by
+  sorry
+
+/-- Sparse paper, **Theorem 4.1** as printed fails along one sequence. -/
+theorem sparse_theorem4_1_printed_false_seq :
+    ∃ B : (n : ℕ) → Set (Fin n),
+      (∀ M : ℝ, ∀ᶠ n : ℕ in atTop, (1 + 1 / 2) * Real.log n ≤ 1 * (1 / 2) * n ∧
+        M ≤ 1 * 1 * (1 / 2) ^ 2 * ((n : ℝ) / 2 - (B n).ncard)) ∧
+      ¬ ∃ A C₁ c₁ C₂ c₂ : ℝ, 0 < c₁ ∧ 0 < c₂ ∧ ∀ᶠ n : ℕ in atTop,
+          1 - C₁ / (1 ^ 2 * (1 / 2) ^ 2 *
+                min (n : ℝ) (1 * (1 / 2) * ((n : ℝ) / 2 - (B n).ncard) ^ 2)) -
+              Real.exp (-(c₁ * 1 ^ 2 * (1 / 2) ^ 4 * 1 * ((n : ℝ) / 2 - (B n).ncard) ^ 2)) -
+              C₂ * (n : ℝ) ^ (-((1 / 2 : ℝ) / 4)) - (n : ℝ) ^ (-(c₂ * 1 * (1 / 2))) ≤
+            lazyProb n 1 (1 / 2) 1 (fun G c => ∃ t : ℕ,
+              (t : ℝ) ≤ A * Real.log n / (1 * (1 / 2)) ∧ lazyBlueAfter G c (B n) t = ∅) := by
   sorry
 
 /-- `Φ` is the distribution function of the standard Gaussian law (a compared theorem: it

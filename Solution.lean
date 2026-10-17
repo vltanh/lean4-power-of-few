@@ -18,6 +18,7 @@ public import PowerOfFew.Model.Gnp
 public import PowerOfFew.Model.Majority
 public import PowerOfFew.Model.Normal
 public import PowerOfFew.Sparse.Activation
+public import PowerOfFew.Sparse.ActivationCounterexample
 public import PowerOfFew.Sparse.BerryEsseen
 public import PowerOfFew.Sparse.Chernoff
 public import PowerOfFew.Sparse.DayOne

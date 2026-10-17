@@ -46,10 +46,12 @@ each vertex is Red with probability `p_r = 1/2 + ω(max{(pn)⁻¹, n^(−1/2)})`
 with probability `1 − o(1)`.
 
 Correction: the paper asks only for `p_r = 1/2 + ω((pn)⁻¹)`, which is false
-(`theorem1_5_printed_false`). Here `p = p n` and `p_r = q n` are sequences. -/
+(`theorem1_5_printed_false`). Here `p = p n` and `p_r = q n` are sequences, and
+`p ≥ (1 + λ) n⁻¹ log n` is required for large `n` only (required for every `n`, it would be
+unsatisfiable at `n = 3` when `λ > 3/log 3 − 1`). -/
 theorem theorem1_5 (hBE : ShevtsovaBerryEsseen) (hBBK : BBKTheorem3_2) (hBLM : BLMTheorem6_10)
     {lam : ℝ} (hlam : 0 < lam) {p q : ℕ → ℝ} (hp0 : ∀ n, 0 < p n) (hp1 : ∀ n, p n ≤ 1)
-    (hlog : ∀ n : ℕ, (1 + lam) * Real.log n / n ≤ p n) (hq : ∀ n, q n ≤ 1)
+    (hlog : ∀ᶠ n : ℕ in atTop, (1 + lam) * Real.log n / n ≤ p n) (hq : ∀ n, q n ≤ 1)
     (hbias : Tendsto (fun n : ℕ => (q n - 1 / 2) * min (p n * n) (Real.sqrt n)) atTop atTop) :
     Tendsto (fun n : ℕ =>
       coloredProb n (p n) (q n) (fun G B₀ => ∃ t, blueAfter G B₀ t = ∅)) atTop (𝓝 1) := by
